@@ -1,2 +1,7 @@
 # Auto-generated agent run scripts
 scripts/.run/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/

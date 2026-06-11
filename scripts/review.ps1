@@ -19,9 +19,9 @@ param()
 $ProjectRoot  = Split-Path $PSScriptRoot -Parent
 $SettingsPath = Join-Path $env:USERPROFILE ".pi\agent\settings.json"
 $PromptFile   = "scripts/prompts/review.md"
-$ReviewModel  = "claude-opus-4-5"
+$ReviewModel  = "claude-opus-4.6"
 $ReviewProvider = "amazon-bedrock"
-$DefaultModel   = "claude-sonnet-4-5"
+$DefaultModel   = "claude-sonnet-4.6"
 $DefaultProvider = "amazon-bedrock"
 
 # --- Validate settings file exists ---

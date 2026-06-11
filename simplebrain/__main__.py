@@ -14,9 +14,18 @@ def main():
     parser.add_argument("--mcp", action="store_true", help="Run as MCP server over stdio")
     parser.add_argument("--host", default="0.0.0.0", help="API host (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=8000, help="API port (default: 8000)")
+    parser.add_argument(
+        "--dir",
+        default=None,
+        metavar="PATH",
+        help="Brain root directory (overrides BRAIN_ROOT in .env)",
+    )
     args = parser.parse_args()
 
     config = BrainConfig.from_env()
+    if args.dir:
+        from pathlib import Path
+        config = config.model_copy(update={"brain_root": Path(args.dir).expanduser().resolve()})
 
     if args.setup:
         _run_setup(config)
@@ -44,6 +53,7 @@ def _run_setup(config: BrainConfig) -> None:
     if config.llm_api_base:
         print(f"  API base : {config.llm_api_base}")
     print(f"  Supported: {' | '.join(SUPPORTED_PROVIDERS)}")
+    print(f"  Brain dir: {config.brain_root}")
     print()
 
     # Verify LLM key is present for providers that need one

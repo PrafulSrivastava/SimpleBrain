@@ -262,7 +262,7 @@ try:
     check("Tags index populated", len(tags) > 0, f"{len(tags)} unique tags")
 
     # Search
-    r = httpx.get(f"{BASE_URL}/search?query=postgres", timeout=5)
+    r = httpx.get(f"{BASE_URL}/search?query=database", timeout=5)
     check("/search works", r.status_code == 200)
     results_data = r.json().get("results", [])
     check("Search returns results", len(results_data) > 0, f"{len(results_data)} hits")

@@ -1,9 +1,23 @@
 from __future__ import annotations
 from pathlib import Path
 from datetime import datetime
+import re
 import frontmatter
 from simplebrain.config import BrainConfig
 from simplebrain.models import Chunk
+
+
+def _filename_for(chunk: Chunk) -> str:
+    """Return a human-readable filename like 'postgresql-chosen-as-datastore-3a1b2c.md'.
+    Falls back to bare chunk.id if no title is available.
+    """
+    if chunk.title:
+        slug = chunk.title.lower().strip()
+        slug = re.sub(r"[^\w\s-]", "", slug)
+        slug = re.sub(r"[\s_]+", "-", slug)
+        slug = re.sub(r"-+", "-", slug).strip("-")[:50]
+        return f"{slug}-{chunk.id}.md"
+    return f"{chunk.id}.md"
 
 
 class KnowledgeStore:
@@ -13,7 +27,7 @@ class KnowledgeStore:
     def write(self, chunk: Chunk, folder: str) -> Path:
         target_dir = self.config.knowledge_dir / folder
         target_dir.mkdir(parents=True, exist_ok=True)
-        path = target_dir / f"{chunk.id}.md"
+        path = target_dir / _filename_for(chunk)
         self._write_chunk_file(chunk, path)
         chunk.file_path = str(path.relative_to(self.config.brain_root))
         return path
@@ -25,6 +39,7 @@ class KnowledgeStore:
         post = frontmatter.Post(
             content=chunk.content,
             id=chunk.id,
+            title=chunk.title or "",
             created=chunk.created.isoformat(),
             source_raw=chunk.source_raw,
             tags=chunk.tags,
@@ -36,12 +51,13 @@ class KnowledgeStore:
         path.write_text(frontmatter.dumps(post), encoding="utf-8")
 
     def read(self, chunk_id: str) -> Chunk:
-        matches = list(self.config.knowledge_dir.rglob(f"{chunk_id}.md"))
+        matches = list(self.config.knowledge_dir.rglob(f"*{chunk_id}.md"))
         if not matches:
             raise FileNotFoundError(f"Chunk {chunk_id} not found")
         post = frontmatter.load(str(matches[0]))
         return Chunk(
             id=post["id"],
+            title=post.get("title") or None,
             created=datetime.fromisoformat(post["created"]),
             source_raw=post["source_raw"],
             tags=post.get("tags", []),
@@ -54,7 +70,7 @@ class KnowledgeStore:
         )
 
     def update_links(self, chunk_id: str, links: list[str]) -> None:
-        matches = list(self.config.knowledge_dir.rglob(f"{chunk_id}.md"))
+        matches = list(self.config.knowledge_dir.rglob(f"*{chunk_id}.md"))
         if not matches:
             return
         post = frontmatter.load(str(matches[0]))

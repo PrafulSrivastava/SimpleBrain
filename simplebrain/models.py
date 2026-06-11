@@ -42,6 +42,7 @@ class Chunk(BaseModel):
     id: str = Field(default_factory=_new_id)
     created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     source_raw: str
+    title: Optional[str] = None          # short human-readable title, used as filename slug
     tags: list[str] = Field(default_factory=list)
     links: list[str] = Field(default_factory=list)
     parent: Optional[str] = None

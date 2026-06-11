@@ -63,6 +63,10 @@ class TagStage:
                     t = t.strip().lower()
                     if not t.startswith("#"):
                         t = "#" + t
+                    # Slugify: replace spaces and underscores with hyphens
+                    import re as _re
+                    t = "#" + _re.sub(r"[\s_]+", "-", t[1:])
+                    t = _re.sub(r"-+", "-", t).strip("-")
                     normalised.append(t)
             chunk.tags = normalised
         else:

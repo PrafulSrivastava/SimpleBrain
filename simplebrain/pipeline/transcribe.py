@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from datetime import datetime, timezone
 from simplebrain.config import BrainConfig
 from simplebrain.models import Job, JobType
@@ -19,7 +20,9 @@ def _get_model():
             "Install it with: pip install faster-whisper"
         )
     if _whisper_model is None:
-        _whisper_model = WhisperModel("base", device="auto", compute_type="auto")
+        device  = os.getenv("WHISPER_DEVICE",  "cpu")   # cpu | cuda | auto | mps
+        compute = os.getenv("WHISPER_COMPUTE", "int8")  # int8 | float16 | float32
+        _whisper_model = WhisperModel("base", device=device, compute_type=compute)
     return _whisper_model
 
 

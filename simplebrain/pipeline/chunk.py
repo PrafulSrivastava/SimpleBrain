@@ -46,7 +46,7 @@ class ChunkStage:
         for content in contents:
             chunk = Chunk(
                 content=content.strip(),
-                source_raw=job.transcript_path or "",
+                source_raw=job.raw_path or "",   # always the original source (audio or text)
                 user=job.user,
                 device=job.device,
                 parent=parent_id,

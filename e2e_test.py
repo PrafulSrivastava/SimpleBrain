@@ -112,6 +112,8 @@ try:
         cwd=str(Path(__file__).parent),
         env={**os.environ,
              "PYTHONIOENCODING": "utf-8",
+             "WHISPER_DEVICE":   os.getenv("WHISPER_DEVICE",  "cpu"),
+             "WHISPER_COMPUTE":  os.getenv("WHISPER_COMPUTE", "int8"),
              "LLM_PROVIDER": os.getenv("LLM_PROVIDER","openai"),
              "LLM_MODEL":    os.getenv("LLM_MODEL","gpt-4o-mini"),
              "LLM_API_BASE": os.getenv("LLM_API_BASE",""),
@@ -187,7 +189,96 @@ except Exception as exc:
     check("Ingest phase", False, str(exc))
     traceback.print_exc()
 
-# ── Phase 4: Wait for worker to process ───────────────────────────────────────
+# ── Phase 3b: Ingest voice note ─────────────────────────────────────────────
+print("\n[Phase 3b] Ingest voice note")
+print("-"*60)
+
+try:
+    import httpx, base64, struct, math
+
+    # Build a minimal valid WAV: 1 second of 440 Hz sine, 16-bit mono 16kHz
+    sample_rate  = 16000
+    duration_s   = 1
+    num_samples  = sample_rate * duration_s
+    samples      = [int(32767 * math.sin(2 * math.pi * 440 * i / sample_rate))
+                    for i in range(num_samples)]
+    pcm          = struct.pack(f"<{num_samples}h", *samples)
+
+    def _wav(pcm_data: bytes, rate: int) -> bytes:
+        n = len(pcm_data)
+        hdr = struct.pack(
+            "<4sI4s4sIHHIIHH4sI",
+            b"RIFF", 36 + n, b"WAVE",
+            b"fmt ", 16, 1, 1, rate, rate * 2, 2, 16,
+            b"data", n,
+        )
+        return hdr + pcm_data
+
+    wav_bytes = _wav(pcm, sample_rate)
+    audio_b64 = base64.b64encode(wav_bytes).decode()
+
+    r = httpx.post(
+        f"{BASE_URL}/notes/voice",
+        json={"audio_b64": audio_b64, "filename": "test-note.wav",
+              "user": "e2e-test", "device": "ci"},
+        timeout=15,
+    )
+    ok = r.status_code == 200
+    voice_job_id = r.json().get("job_id", "?") if ok else "?"
+    check("POST /notes/voice", ok, f"job_id={voice_job_id}")
+
+    if ok:
+        # Verify audio file saved to _raw/audio/
+        audio_files = list((TEST_DIR / "_raw" / "audio").glob("*.wav"))
+        check("Audio file saved to _raw/audio/", len(audio_files) == 1,
+              audio_files[0].name if audio_files else "missing")
+
+        # Wait for transcription
+        info("Waiting for voice job to process...")
+        deadline = time.time() + WAIT_SECS
+        while time.time() < deadline:
+            time.sleep(2)
+            r2 = httpx.get(f"{BASE_URL}/status", timeout=5)
+            if r2.json().get("queue_depth", 1) == 0:
+                break
+
+        # Verify transcript saved to _raw/transcripts/
+        all_transcripts = list((TEST_DIR / "_raw" / "transcripts").glob("*.txt"))
+        voice_transcripts = [f for f in all_transcripts
+                             if voice_job_id[:6] in f.name]
+        check("Transcript saved to _raw/transcripts/",
+              len(voice_transcripts) == 1,
+              voice_transcripts[0].name if voice_transcripts else "missing")
+
+        if voice_transcripts:
+            transcript_text = voice_transcripts[0].read_text(encoding="utf-8")
+            info(f"Transcript content: '{transcript_text[:80]}'")
+
+        # Verify source_raw in chunk frontmatter points to audio (not transcript)
+        new_chunks = list((TEST_DIR / "knowledge").rglob("*.md"))
+        voice_chunks = []
+        for cf in new_chunks:
+            if cf.name == "README.md":
+                continue
+            import frontmatter as fm
+            post = fm.load(str(cf))
+            sr = post.get("source_raw", "")
+            if voice_job_id[:6] in str(sr) or "audio" in str(sr):
+                voice_chunks.append((cf, sr))
+
+        if voice_chunks:
+            cf, sr = voice_chunks[0]
+            check("Chunk source_raw points to original audio",
+                  "audio" in str(sr),
+                  f"source_raw={sr}")
+        else:
+            check("Voice note produced knowledge chunk", False, "no chunk found")
+
+except Exception as exc:
+    check("Voice ingest phase", False, str(exc))
+    traceback.print_exc()
+
+
 print(f"\n[Phase 4] Worker processing (waiting up to {WAIT_SECS}s)")
 print("-"*60)
 
@@ -262,7 +353,7 @@ try:
     check("Tags index populated", len(tags) > 0, f"{len(tags)} unique tags")
 
     # Search
-    r = httpx.get(f"{BASE_URL}/search?query=database", timeout=5)
+    r = httpx.get(f"{BASE_URL}/search?query=roadmap", timeout=5)
     check("/search works", r.status_code == 200)
     results_data = r.json().get("results", [])
     check("Search returns results", len(results_data) > 0, f"{len(results_data)} hits")

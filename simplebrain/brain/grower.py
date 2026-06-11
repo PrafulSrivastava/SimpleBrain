@@ -20,6 +20,7 @@ class SelfGrower:
         return json.loads(self._structure_path.read_text())
 
     def save_structure(self, structure: dict) -> None:
+        self._structure_path.parent.mkdir(parents=True, exist_ok=True)
         self._structure_path.write_text(json.dumps(structure, indent=2))
 
     def get_folders(self) -> list[str]:

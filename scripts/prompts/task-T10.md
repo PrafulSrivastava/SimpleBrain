@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T10 — Self-Healer
+# SimpleBrain - Agent Task: T10 - Self-Healer
 
 You are a Pi coding agent implementing **Task 10** of the SimpleBrain project.
 You are running IN PARALLEL with agents T4 and T8. Your files do NOT overlap with theirs.
@@ -8,7 +8,7 @@ Implement **Task 10: Self-Healer** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T7 exports for KnowledgeStore interface, T1 exports for Conflict models
+2. Read `_agent_comms.json` - check T7 exports for KnowledgeStore interface, T1 exports for Conflict models
 
 ## Before You Start
 ```bash
@@ -36,10 +36,10 @@ Note: `simplebrain/brain/__init__.py` is shared with T8. Create it as an empty f
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T4** → working on `simplebrain/store/raw.py` and `ingest/service.py`
-- **T8** → working on `simplebrain/pipeline/file.py` and `simplebrain/brain/grower.py`
+- **T4** -> working on `simplebrain/store/raw.py` and `ingest/service.py`
+- **T8** -> working on `simplebrain/pipeline/file.py` and `simplebrain/brain/grower.py`
 
-T8 owns `brain/grower.py`, you own `brain/healer.py` — no conflict.
+T8 owns `brain/grower.py`, you own `brain/healer.py` - no conflict.
 
 ## After Completion
 ```bash

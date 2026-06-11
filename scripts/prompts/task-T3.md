@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T3 — File Queue
+# SimpleBrain - Agent Task: T3 - File Queue
 
 You are a Pi coding agent implementing **Task 3** of the SimpleBrain project.
 You are running IN PARALLEL with agents T5, T6, and T7. Your files do NOT overlap with theirs.
@@ -8,7 +8,7 @@ Implement **Task 3: File Queue** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read the comms file: `_agent_comms.json` — check T2 exports for BrainConfig interface
+2. Read the comms file: `_agent_comms.json` - check T2 exports for BrainConfig interface
 
 ## Before You Start
 ```bash
@@ -33,9 +33,9 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T5** → working on `simplebrain/pipeline/transcribe.py`
-- **T6** → working on `simplebrain/pipeline/chunk.py` and `tag.py`
-- **T7** → working on `simplebrain/store/knowledge.py` and `index.py`
+- **T5** -> working on `simplebrain/pipeline/transcribe.py`
+- **T6** -> working on `simplebrain/pipeline/chunk.py` and `tag.py`
+- **T7** -> working on `simplebrain/store/knowledge.py` and `index.py`
 
 These files DO NOT overlap. Do not touch their files. Do not wait for them.
 If you need to check if another agent hit a problem, read `_agent_comms.json`.

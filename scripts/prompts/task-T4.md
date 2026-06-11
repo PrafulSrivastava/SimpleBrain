@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T4 — Raw Store & Ingest Service
+# SimpleBrain - Agent Task: T4 - Raw Store & Ingest Service
 
 You are a Pi coding agent implementing **Task 4** of the SimpleBrain project.
 You are running IN PARALLEL with agents T8 and T10. Your files do NOT overlap with theirs.
@@ -8,7 +8,7 @@ Implement **Task 4: Raw Store & Ingest Service** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T3 exports for FileQueue interface, T2 exports for BrainConfig
+2. Read `_agent_comms.json` - check T3 exports for FileQueue interface, T2 exports for BrainConfig
 
 ## Before You Start
 ```bash
@@ -36,8 +36,8 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T8** → working on `simplebrain/pipeline/file.py` and `simplebrain/brain/grower.py`
-- **T10** → working on `simplebrain/brain/healer.py`
+- **T8** -> working on `simplebrain/pipeline/file.py` and `simplebrain/brain/grower.py`
+- **T10** -> working on `simplebrain/brain/healer.py`
 
 No file conflicts. Check `_agent_comms.json` if you need to leave a message for another agent.
 

@@ -189,7 +189,8 @@ foreach ($tid in $tasks) {
     $runContent += 'Write-Host ""' + "`r`n"
     $runContent += "pi '@$relPrompt'" + "`r`n"
 
-    Set-Content -Path $runFile -Value $runContent -Encoding UTF8
+    # Write without BOM (Set-Content -Encoding UTF8 adds BOM on older PowerShell)
+    [System.IO.File]::WriteAllText($runFile, $runContent, [System.Text.UTF8Encoding]::new($false))
 
     Write-Host "  + $tid - $taskName" -ForegroundColor Green
 

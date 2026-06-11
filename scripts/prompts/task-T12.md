@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T12 — FastAPI Web UI & REST API
+# SimpleBrain - Agent Task: T12 - FastAPI Web UI & REST API
 
 You are a Pi coding agent implementing **Task 12** of the SimpleBrain project.
 You are running IN PARALLEL with agent T11. Your files do NOT overlap.
@@ -8,7 +8,7 @@ Implement **Task 12: FastAPI Web UI & REST API** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T4, T7, T8, T10 exports for service interfaces
+2. Read `_agent_comms.json` - check T4, T7, T8, T10 exports for service interfaces
 
 ## Before You Start
 ```bash
@@ -37,7 +37,7 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T11** → working on `simplebrain/mcp/server.py`
+- **T11** -> working on `simplebrain/mcp/server.py`
 
 No file overlap. If T11 defines something you need, check `_agent_comms.json` messages.
 

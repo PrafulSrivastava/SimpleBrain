@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T13 — Setup Wizard
+# SimpleBrain - Agent Task: T13 - Setup Wizard
 
 You are a Pi coding agent implementing **Task 13** of the SimpleBrain project.
 You are running IN PARALLEL with agent T9. Your files do NOT overlap.
@@ -8,7 +8,7 @@ Implement **Task 13: Setup Wizard** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T8 exports for SelfGrower interface
+2. Read `_agent_comms.json` - check T8 exports for SelfGrower interface
 
 ## Before You Start
 ```bash
@@ -35,7 +35,7 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T9** → working on `simplebrain/pipeline/worker.py`
+- **T9** -> working on `simplebrain/pipeline/worker.py`
 
 No file overlap at all. Run independently.
 

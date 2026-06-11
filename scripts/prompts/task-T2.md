@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T2 — BrainConfig
+# SimpleBrain - Agent Task: T2 - BrainConfig
 
 You are a Pi coding agent implementing **Task 2** of the SimpleBrain project.
 
@@ -53,7 +53,7 @@ console.log('Comms updated: T2 complete');
 
 ## Important Notes
 - You are the ONLY agent in Wave 2
-- T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13 all import BrainConfig — get the property names right
-- The `config` fixture in conftest.py returns a `BrainConfig` — make sure your class matches what conftest expects
+- T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13 all import BrainConfig - get the property names right
+- The `config` fixture in conftest.py returns a `BrainConfig` - make sure your class matches what conftest expects
 
 **Begin now.**

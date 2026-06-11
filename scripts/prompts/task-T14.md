@@ -1,14 +1,14 @@
-# SimpleBrain — Agent Task: T14 — Entry Point & README
+# SimpleBrain - Agent Task: T14 - Entry Point & README
 
 You are a Pi coding agent implementing **Task 14** of the SimpleBrain project.
-You are the FINAL agent — all prior waves are complete.
+You are the FINAL agent - all prior waves are complete.
 
 ## Your Mission
 Implement **Task 14: Entry Point & README** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — review ALL task exports to understand the full interface landscape before writing the entry point
+2. Read `_agent_comms.json` - review ALL task exports to understand the full interface landscape before writing the entry point
 3. Read the existing source files to understand what has been built
 
 ## Before You Start
@@ -63,7 +63,7 @@ console.log('SimpleBrain build complete!');
 ## Git Commit
 ```bash
 git add simplebrain/__main__.py README.md _agent_comms.json
-git commit -m "feat: entry point and README — SimpleBrain v0.1.0 complete"
+git commit -m "feat: entry point and README - SimpleBrain v0.1.0 complete"
 ```
 
 **Begin now.**

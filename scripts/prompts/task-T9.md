@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T9 — Background Worker
+# SimpleBrain - Agent Task: T9 - Background Worker
 
 You are a Pi coding agent implementing **Task 9** of the SimpleBrain project.
 You are running IN PARALLEL with agent T13. Your files do NOT overlap.
@@ -8,7 +8,7 @@ Implement **Task 9: Background Worker** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check ALL Wave 3 and Wave 4 task exports for interfaces
+2. Read `_agent_comms.json` - check ALL Wave 3 and Wave 4 task exports for interfaces
 
 ## Before You Start
 ```bash

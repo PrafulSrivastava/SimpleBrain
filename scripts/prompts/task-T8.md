@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T8 — Pipeline File Stage
+# SimpleBrain - Agent Task: T8 - Pipeline File Stage
 
 You are a Pi coding agent implementing **Task 8** of the SimpleBrain project.
 You are running IN PARALLEL with agents T4 and T10. Your files do NOT overlap with theirs.
@@ -8,7 +8,7 @@ Implement **Task 8: Pipeline File Stage** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T7 exports for KnowledgeStore interface
+2. Read `_agent_comms.json` - check T7 exports for KnowledgeStore interface
 
 ## Before You Start
 ```bash
@@ -26,7 +26,7 @@ console.log('Comms updated: T8 running');
 ```
 
 ## Your Task
-Implement every step under `## Task 8: Pipeline — File Stage` in the plan.
+Implement every step under `## Task 8: Pipeline - File Stage` in the plan.
 
 Files you own (ONLY touch these):
 - `simplebrain/pipeline/file.py`
@@ -36,10 +36,10 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T4** → working on `simplebrain/store/raw.py` and `simplebrain/ingest/service.py`
-- **T10** → working on `simplebrain/brain/healer.py`
+- **T4** -> working on `simplebrain/store/raw.py` and `simplebrain/ingest/service.py`
+- **T10** -> working on `simplebrain/brain/healer.py`
 
-T10 also writes to `simplebrain/brain/` — you own `grower.py`, T10 owns `healer.py`. You both need `brain/__init__.py` — create it as an empty file. If T10 already created it, leave it as is.
+T10 also writes to `simplebrain/brain/` - you own `grower.py`, T10 owns `healer.py`. You both need `brain/__init__.py` - create it as an empty file. If T10 already created it, leave it as is.
 
 ## After Completion
 ```bash

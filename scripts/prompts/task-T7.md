@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T7 — Knowledge Store & Index Store
+# SimpleBrain - Agent Task: T7 - Knowledge Store & Index Store
 
 You are a Pi coding agent implementing **Task 7** of the SimpleBrain project.
 You are running IN PARALLEL with agents T3, T5, and T6. Your files do NOT overlap with theirs.
@@ -8,7 +8,7 @@ Implement **Task 7: Knowledge Store & Index Store** from the implementation plan
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T2 exports for BrainConfig, T1 exports for Chunk model
+2. Read `_agent_comms.json` - check T2 exports for BrainConfig, T1 exports for Chunk model
 
 ## Before You Start
 ```bash
@@ -31,15 +31,15 @@ Files you own (ONLY touch these):
 - `simplebrain/store/index.py`
 - `tests/test_index.py`
 
-Note: `simplebrain/store/__init__.py` may be created by T4 later. If it doesn't exist yet, create it as an empty file — safe to do.
+Note: `simplebrain/store/__init__.py` may be created by T4 later. If it doesn't exist yet, create it as an empty file - safe to do.
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T3** → working on `simplebrain/ingest/queue.py`
-- **T5** → working on `simplebrain/pipeline/transcribe.py`
-- **T6** → working on `simplebrain/pipeline/chunk.py` and `tag.py`
+- **T3** -> working on `simplebrain/ingest/queue.py`
+- **T5** -> working on `simplebrain/pipeline/transcribe.py`
+- **T6** -> working on `simplebrain/pipeline/chunk.py` and `tag.py`
 
-No overlap. T8 and T10 in Wave 4 will depend on your KnowledgeStore — make sure the interface is clean.
+No overlap. T8 and T10 in Wave 4 will depend on your KnowledgeStore - make sure the interface is clean.
 
 ## After Completion
 ```bash

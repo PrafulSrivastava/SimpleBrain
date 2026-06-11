@@ -1,14 +1,14 @@
-# SimpleBrain — Agent Task: T5 — Pipeline Transcribe
+# SimpleBrain - Agent Task: T5 - Pipeline Transcribe
 
 You are a Pi coding agent implementing **Task 5** of the SimpleBrain project.
 You are running IN PARALLEL with agents T3, T6, and T7. Your files do NOT overlap with theirs.
 
 ## Your Mission
-Implement **Task 5: Pipeline — Transcribe** from the implementation plan.
+Implement **Task 5: Pipeline - Transcribe** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T2 exports for BrainConfig, T1 exports for Job model
+2. Read `_agent_comms.json` - check T2 exports for BrainConfig, T1 exports for Job model
 
 ## Before You Start
 ```bash
@@ -24,7 +24,7 @@ console.log('Comms updated: T5 running');
 ```
 
 ## Your Task
-Implement every step under `## Task 5: Pipeline — Transcribe` in the plan.
+Implement every step under `## Task 5: Pipeline - Transcribe` in the plan.
 
 Files you own (ONLY touch these):
 - `simplebrain/pipeline/__init__.py`
@@ -33,9 +33,9 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T3** → working on `simplebrain/ingest/queue.py`
-- **T6** → working on `simplebrain/pipeline/chunk.py` and `tag.py`
-- **T7** → working on `simplebrain/store/knowledge.py` and `index.py`
+- **T3** -> working on `simplebrain/ingest/queue.py`
+- **T6** -> working on `simplebrain/pipeline/chunk.py` and `tag.py`
+- **T7** -> working on `simplebrain/store/knowledge.py` and `index.py`
 
 No overlap. Do not touch their files.
 

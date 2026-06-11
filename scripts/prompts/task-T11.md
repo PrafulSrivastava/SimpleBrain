@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T11 — MCP Server
+# SimpleBrain - Agent Task: T11 - MCP Server
 
 You are a Pi coding agent implementing **Task 11** of the SimpleBrain project.
 You are running IN PARALLEL with agent T12. Your files do NOT overlap.
@@ -8,7 +8,7 @@ Implement **Task 11: MCP Server** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check ALL prior task exports for the full interface picture
+2. Read `_agent_comms.json` - check ALL prior task exports for the full interface picture
 
 ## Before You Start
 ```bash
@@ -35,7 +35,7 @@ Files you own (ONLY touch these):
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T12** → working on `simplebrain/api/routes.py`, `simplebrain/api/ui.py`, `ui/index.html`
+- **T12** -> working on `simplebrain/api/routes.py`, `simplebrain/api/ui.py`, `ui/index.html`
 
 No file overlap. You own `mcp/`, T12 owns `api/` and `ui/`.
 

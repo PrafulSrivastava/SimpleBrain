@@ -1,14 +1,14 @@
-# SimpleBrain — Agent Task: T6 — Pipeline Chunk & Tag
+# SimpleBrain - Agent Task: T6 - Pipeline Chunk & Tag
 
 You are a Pi coding agent implementing **Task 6** of the SimpleBrain project.
 You are running IN PARALLEL with agents T3, T5, and T7. Your files do NOT overlap with theirs.
 
 ## Your Mission
-Implement **Task 6: Pipeline — Chunk & Tag** from the implementation plan.
+Implement **Task 6: Pipeline - Chunk & Tag** from the implementation plan.
 
 ## Files You Need to Read First
 1. Read the full plan: `docs/superpowers/plans/2026-06-11-simplebrain-implementation.md`
-2. Read `_agent_comms.json` — check T2 exports for BrainConfig, T1 exports for Chunk model
+2. Read `_agent_comms.json` - check T2 exports for BrainConfig, T1 exports for Chunk model
 
 ## Before You Start
 ```bash
@@ -24,7 +24,7 @@ console.log('Comms updated: T6 running');
 ```
 
 ## Your Task
-Implement every step under `## Task 6: Pipeline — Chunk & Tag` in the plan.
+Implement every step under `## Task 6: Pipeline - Chunk & Tag` in the plan.
 
 Files you own (ONLY touch these):
 - `simplebrain/pipeline/chunk.py`
@@ -33,13 +33,13 @@ Files you own (ONLY touch these):
 - `tests/test_tag.py`
 
 Note: `simplebrain/pipeline/__init__.py` is owned by T5. If T5 already created it, do not modify it.
-If T5 hasn't run yet, you may create it as an empty file — that's safe since it's just `pass`.
+If T5 hasn't run yet, you may create it as an empty file - that's safe since it's just `pass`.
 
 ## Parallel Agent Awareness
 You are running alongside:
-- **T3** → working on `simplebrain/ingest/queue.py`
-- **T5** → working on `simplebrain/pipeline/transcribe.py`
-- **T7** → working on `simplebrain/store/knowledge.py` and `index.py`
+- **T3** -> working on `simplebrain/ingest/queue.py`
+- **T5** -> working on `simplebrain/pipeline/transcribe.py`
+- **T7** -> working on `simplebrain/store/knowledge.py` and `index.py`
 
 No overlap. Check `_agent_comms.json` to see if T5 has finished `pipeline/__init__.py`.
 

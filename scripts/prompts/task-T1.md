@@ -1,4 +1,4 @@
-# SimpleBrain — Agent Task: T1 — Project Scaffold & Core Models
+# SimpleBrain - Agent Task: T1 - Project Scaffold & Core Models
 
 You are a Pi coding agent implementing **Task 1** of the SimpleBrain project.
 
@@ -10,7 +10,7 @@ Implement **Task 1: Project Scaffold & Core Models** from the implementation pla
 2. Read the comms file: `_agent_comms.json`
 
 ## Before You Start
-Update `_agent_comms.json` — set `tasks.T1.status` to `"running"` and `tasks.T1.started` to the current timestamp.
+Update `_agent_comms.json` - set `tasks.T1.status` to `"running"` and `tasks.T1.started` to the current timestamp.
 
 Use this exact bash command to update:
 ```bash
@@ -57,8 +57,8 @@ console.log('Comms updated: T1 complete');
 ```
 
 ## Important Notes
-- You are the ONLY agent in Wave 1 — no coordination needed
-- All other tasks depend on this one — get models.py right
+- You are the ONLY agent in Wave 1 - no coordination needed
+- All other tasks depend on this one - get models.py right
 - Do not skip any steps in the plan
 - The `conftest.py` fixtures (`brain_dir`, `config`) are used by every test file
 

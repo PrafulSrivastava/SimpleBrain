@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import time
 from pathlib import Path
 from typing import Optional
 from simplebrain.config import BrainConfig
@@ -11,7 +12,10 @@ class FileQueue:
         self.config = config
 
     def _job_path(self, job: Job) -> Path:
-        return self.config.queue_dir / f"{job.created.timestamp():.6f}-{job.id}.json"
+        # Use time.time_ns() for nanosecond-precision ordering so that jobs
+        # enqueued within the same millisecond are still ordered correctly.
+        ns = time.time_ns()
+        return self.config.queue_dir / f"{ns:020d}-{job.id}.json"
 
     def enqueue(self, job: Job) -> None:
         path = self._job_path(job)

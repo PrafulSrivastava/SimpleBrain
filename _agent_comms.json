@@ -3,29 +3,366 @@
   "project": "SimpleBrain",
   "plan": "docs/superpowers/plans/2026-06-11-simplebrain-implementation.md",
   "waves": {
-    "1": ["T1"],
-    "2": ["T2"],
-    "3": ["T3", "T5", "T6", "T7"],
-    "4": ["T4", "T8", "T10"],
-    "5": ["T9", "T13"],
-    "6": ["T11", "T12"],
-    "7": ["T14"]
+    "1": [
+      "T1"
+    ],
+    "2": [
+      "T2"
+    ],
+    "3": [
+      "T3",
+      "T5",
+      "T6",
+      "T7"
+    ],
+    "4": [
+      "T4",
+      "T8",
+      "T10"
+    ],
+    "5": [
+      "T9",
+      "T13"
+    ],
+    "6": [
+      "T11",
+      "T12"
+    ],
+    "7": [
+      "T14"
+    ]
   },
   "tasks": {
-    "T1":  { "name": "Project Scaffold & Core Models", "wave": 1, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T2":  { "name": "BrainConfig",                   "wave": 2, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T3":  { "name": "File Queue",                    "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T5":  { "name": "Pipeline Transcribe",           "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T6":  { "name": "Pipeline Chunk & Tag",          "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T7":  { "name": "Knowledge Store & Index Store", "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T4":  { "name": "Raw Store & Ingest Service",    "wave": 4, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T8":  { "name": "Pipeline File Stage",           "wave": 4, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T10": { "name": "Self-Healer",                   "wave": 4, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T9":  { "name": "Background Worker",             "wave": 5, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T13": { "name": "Setup Wizard",                  "wave": 5, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T11": { "name": "MCP Server",                    "wave": 6, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T12": { "name": "FastAPI Web UI & REST API",     "wave": 6, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
-    "T14": { "name": "Entry Point & README",          "wave": 7, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} }
+    "T1": {
+      "name": "Project Scaffold & Core Models",
+      "wave": 1,
+      "status": "complete",
+      "started": "2026-06-11T12:55:26.558Z",
+      "completed": "2026-06-11T12:57:57.004Z",
+      "notes": "",
+      "exports": {
+        "models": [
+          "Job",
+          "JobType",
+          "JobStatus",
+          "Chunk",
+          "Conflict",
+          "ConflictType",
+          "ConflictStatus",
+          "Resolution",
+          "FolderProposal",
+          "FolderProposalStatus"
+        ],
+        "models_path": "simplebrain/models.py",
+        "conftest_path": "tests/conftest.py",
+        "fixtures": [
+          "brain_dir",
+          "config"
+        ]
+      }
+    },
+    "T2": {
+      "name": "BrainConfig",
+      "wave": 2,
+      "status": "complete",
+      "started": "2026-06-11T12:59:40.695Z",
+      "completed": "2026-06-11T12:59:56.367Z",
+      "notes": "",
+      "exports": {
+        "class": "BrainConfig",
+        "path": "simplebrain/config.py",
+        "properties": [
+          "brain_root",
+          "user",
+          "device",
+          "llm_provider",
+          "llm_model",
+          "raw_audio_dir",
+          "raw_transcripts_dir",
+          "queue_dir",
+          "knowledge_dir",
+          "index_dir",
+          "conflicts_dir",
+          "meta_dir"
+        ],
+        "factory": "BrainConfig.from_env()"
+      }
+    },
+    "T3": {
+      "name": "File Queue",
+      "wave": 3,
+      "status": "complete",
+      "started": "2026-06-11T13:01:01.344Z",
+      "completed": "2026-06-11T13:01:26.543Z",
+      "notes": "",
+      "exports": {
+        "class": "FileQueue",
+        "path": "simplebrain/ingest/queue.py",
+        "methods": [
+          "enqueue(job)",
+          "dequeue() -> Optional[Job]",
+          "mark_failed(job, error)",
+          "complete(job)"
+        ]
+      }
+    },
+    "T5": {
+      "name": "Pipeline Transcribe",
+      "wave": 3,
+      "status": "complete",
+      "started": "2026-06-11T13:00:57.507Z",
+      "completed": "2026-06-11T13:02:47.458Z",
+      "notes": "",
+      "exports": {
+        "class": "TranscribeStage",
+        "path": "simplebrain/pipeline/transcribe.py",
+        "methods": [
+          "run(job: Job) -> Job"
+        ],
+        "notes": "Skips transcription for TEXT jobs. Uses module-level cached WhisperModel."
+      }
+    },
+    "T6": {
+      "name": "Pipeline Chunk & Tag",
+      "wave": 3,
+      "status": "complete",
+      "started": "2026-06-11T13:00:59.085Z",
+      "completed": "2026-06-11T13:01:44.414Z",
+      "notes": "",
+      "exports": {
+        "classes": [
+          "ChunkStage",
+          "TagStage"
+        ],
+        "paths": {
+          "ChunkStage": "simplebrain/pipeline/chunk.py",
+          "TagStage": "simplebrain/pipeline/tag.py"
+        },
+        "methods": {
+          "ChunkStage": [
+            "run(job: Job) -> list[Chunk]"
+          ],
+          "TagStage": [
+            "run(chunk: Chunk) -> Chunk"
+          ]
+        },
+        "notes": "ChunkStage uses litellm.completion. TagStage returns empty tags on JSON parse failure."
+      }
+    },
+    "T7": {
+      "name": "Knowledge Store & Index Store",
+      "wave": 3,
+      "status": "complete",
+      "started": "2026-06-11T13:00:58.433Z",
+      "completed": "2026-06-11T13:01:38.205Z",
+      "notes": "",
+      "exports": {
+        "classes": [
+          "KnowledgeStore",
+          "IndexStore"
+        ],
+        "paths": {
+          "KnowledgeStore": "simplebrain/store/knowledge.py",
+          "IndexStore": "simplebrain/store/index.py"
+        },
+        "methods": {
+          "KnowledgeStore": [
+            "write(chunk, folder) -> Path",
+            "write_unfiled(chunk) -> Path",
+            "read(chunk_id) -> Chunk",
+            "update_links(chunk_id, links)"
+          ],
+          "IndexStore": [
+            "update(chunk, path)",
+            "update_cross_links(chunks, knowledge_store)",
+            "search(query, tags) -> list[str]",
+            "load_tags() -> dict",
+            "load_topics() -> dict"
+          ]
+        }
+      }
+    },
+    "T4": {
+      "name": "Raw Store & Ingest Service",
+      "wave": 4,
+      "status": "complete",
+      "started": "2026-06-11T13:03:09.059Z",
+      "completed": "2026-06-11T13:04:01.404Z",
+      "notes": "",
+      "exports": {
+        "classes": [
+          "RawStore",
+          "IngestService"
+        ],
+        "paths": {
+          "RawStore": "simplebrain/store/raw.py",
+          "IngestService": "simplebrain/ingest/service.py"
+        },
+        "methods": {
+          "IngestService": [
+            "add_text_note(text, user, device) -> str",
+            "add_voice_note(bytes, filename, user, device) -> str"
+          ],
+          "RawStore": [
+            "save_text(text, job_id) -> str",
+            "save_audio(bytes, filename, job_id) -> str",
+            "read_text(path) -> str"
+          ]
+        }
+      }
+    },
+    "T8": {
+      "name": "Pipeline File Stage",
+      "wave": 4,
+      "status": "complete",
+      "started": "2026-06-11T13:03:11.622Z",
+      "completed": "2026-06-11T13:04:04.617Z",
+      "notes": "",
+      "exports": {
+        "classes": [
+          "FileStage",
+          "SelfGrower"
+        ],
+        "paths": {
+          "FileStage": "simplebrain/pipeline/file.py",
+          "SelfGrower": "simplebrain/brain/grower.py"
+        },
+        "methods": {
+          "FileStage": [
+            "run(chunk) -> Tuple[Chunk, Optional[FolderProposal]]"
+          ],
+          "SelfGrower": [
+            "get_folders() -> list[str]",
+            "create_proposal(folder, reasoning, chunk_id) -> FolderProposal",
+            "confirm_proposal(id) -> FolderProposal",
+            "reject_proposal(id) -> FolderProposal",
+            "list_pending() -> list[FolderProposal]"
+          ]
+        }
+      }
+    },
+    "T10": {
+      "name": "Self-Healer",
+      "wave": 4,
+      "status": "complete",
+      "started": "2026-06-11T13:03:12.665Z",
+      "completed": "2026-06-11T13:04:12.939Z",
+      "notes": "",
+      "exports": {
+        "class": "SelfHealer",
+        "path": "simplebrain/brain/healer.py",
+        "methods": [
+          "scan() -> list[Conflict]",
+          "resolve(conflict_id, resolution, resolved_by)",
+          "revert(conflict_id, knowledge_store)",
+          "list_pending() -> list[Conflict]",
+          "load_resolution_log() -> list[dict]"
+        ]
+      }
+    },
+    "T9": {
+      "name": "Background Worker",
+      "wave": 5,
+      "status": "complete",
+      "started": "2026-06-11T13:04:46.840Z",
+      "completed": "2026-06-11T13:06:01.886Z",
+      "notes": "",
+      "exports": {
+        "class": "BackgroundWorker",
+        "path": "simplebrain/pipeline/worker.py",
+        "methods": [
+          "process_one() -> bool",
+          "run_forever(poll_interval=2.0)"
+        ]
+      }
+    },
+    "T13": {
+      "name": "Setup Wizard",
+      "wave": 5,
+      "status": "complete",
+      "started": "2026-06-11T13:04:51.073Z",
+      "completed": "2026-06-11T13:05:58.401Z",
+      "notes": "",
+      "exports": {
+        "class": "SetupWizard",
+        "path": "simplebrain/setup/wizard.py",
+        "methods": [
+          "run(answers: dict) -> list[str]"
+        ],
+        "notes": "answers dict keys: purpose, users, topics, healer_schedule, llm_provider, llm_model. Returns list of created folder names."
+      }
+    },
+    "T11": {
+      "name": "MCP Server",
+      "wave": 6,
+      "status": "complete",
+      "started": "2026-06-11T13:07:06.544Z",
+      "completed": "2026-06-11T13:08:48.216Z",
+      "notes": "",
+      "exports": {
+        "factory": "create_mcp_server(config: BrainConfig) -> SimpleBrainMCPServer",
+        "path": "simplebrain/mcp/server.py",
+        "class": "SimpleBrainMCPServer",
+        "notes": "Wraps mcp.server.Server. Exposes sync list_tools() -> list[Tool] and call_tool(name, args) -> list[TextContent]. Access raw MCP Server via .mcp_server for stdio transport.",
+        "tools": [
+          "add_text_note",
+          "add_voice_note",
+          "job_status",
+          "search",
+          "get_chunk",
+          "list_topics",
+          "list_tags",
+          "list_pending_folder_proposals",
+          "confirm_folder_proposal",
+          "reject_folder_proposal",
+          "list_conflicts",
+          "resolve_conflict",
+          "revert_resolution",
+          "run_healer",
+          "get_brain_status"
+        ]
+      }
+    },
+    "T12": {
+      "name": "FastAPI Web UI & REST API",
+      "wave": 6,
+      "status": "complete",
+      "started": "2026-06-11T13:06:34.971Z",
+      "completed": "2026-06-11T13:08:37.376Z",
+      "notes": "",
+      "exports": {
+        "factory": "create_app(config: BrainConfig) -> FastAPI",
+        "path": "simplebrain/api/routes.py",
+        "ui": "ui/index.html",
+        "endpoints": [
+          "GET /health",
+          "GET /status",
+          "POST /notes/text",
+          "POST /notes/voice",
+          "GET /topics",
+          "GET /tags",
+          "GET /search",
+          "GET /chunks/{id}",
+          "GET /proposals",
+          "POST /proposals/{id}/confirm",
+          "POST /proposals/{id}/reject",
+          "GET /conflicts",
+          "POST /conflicts/{id}/resolve",
+          "POST /conflicts/{id}/revert",
+          "POST /heal",
+          "GET /"
+        ]
+      }
+    },
+    "T14": {
+      "name": "Entry Point & README",
+      "wave": 7,
+      "status": "running",
+      "started": "2026-06-11T13:09:07.706Z",
+      "completed": null,
+      "notes": "",
+      "exports": {}
+    }
   },
   "messages": [],
   "shared_context": {}

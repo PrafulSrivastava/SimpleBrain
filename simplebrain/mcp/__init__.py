@@ -1,0 +1,1 @@
+"""SimpleBrain MCP server package."""

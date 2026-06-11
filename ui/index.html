@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>SimpleBrain</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --input: #2a2a2a;
+      --border: #333;
+      --text: #f0f0f0;
+      --muted: #9ca3af;
+      --accent: #7c3aed;
+      --accent-light: #a78bfa;
+      --danger: #dc2626;
+      --danger-dark: #991b1b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: env(safe-area-inset-top, 1rem) 1rem env(safe-area-inset-bottom, 1rem);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0 1.25rem;
+    }
+
+    header h1 { font-size: 1.5rem; color: var(--accent-light); }
+
+    .pill {
+      font-size: 0.7rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+      color: var(--accent-light);
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--input);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 1rem;
+      min-height: 110px;
+      resize: vertical;
+      outline: none;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--input);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      outline: none;
+    }
+
+    input[type="text"]:focus { border-color: var(--accent); }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.15s;
+    }
+
+    button:active { opacity: 0.75; }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-record  { background: var(--danger); color: white; }
+    .btn-record.recording {
+      background: var(--danger-dark);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.6; }
+    }
+
+    .status-line {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #2e1065;
+      color: var(--accent-light);
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      margin: 2px 2px 0 0;
+    }
+
+    .result-item {
+      border-top: 1px solid var(--border);
+      margin-top: 0.6rem;
+      padding-top: 0.6rem;
+    }
+
+    .result-item p { font-size: 0.88rem; line-height: 1.45; color: #e5e7eb; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      text-align: center;
+    }
+
+    .stat-box {
+      background: var(--input);
+      border-radius: 8px;
+      padding: 0.6rem 0.4rem;
+    }
+
+    .stat-box .num { font-size: 1.4rem; font-weight: 700; color: var(--accent-light); }
+    .stat-box .lbl { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🧠 SimpleBrain</h1>
+    <span class="pill" id="connStatus">connecting…</span>
+  </header>
+
+  <!-- Voice note -->
+  <div class="card">
+    <h2>🎙 Voice Note</h2>
+    <button class="btn-record" id="recordBtn" onclick="toggleRecording()">
+      Start Recording
+    </button>
+    <p class="status-line" id="recordStatus">Tap to record a voice note</p>
+  </div>
+
+  <!-- Text note -->
+  <div class="card">
+    <h2>✏️ Text Note</h2>
+    <textarea id="noteText" placeholder="Type your note here…"></textarea>
+    <button class="btn-primary" onclick="submitText()">Add Note</button>
+    <p class="status-line" id="textStatus"></p>
+  </div>
+
+  <!-- Search -->
+  <div class="card">
+    <h2>🔍 Search</h2>
+    <input type="text" id="searchQuery" placeholder="Search topics, tags, or keywords…"
+           onkeydown="if(event.key==='Enter') doSearch()" />
+    <button class="btn-primary" onclick="doSearch()">Search</button>
+    <div id="searchResults"></div>
+  </div>
+
+  <!-- Status -->
+  <div class="card">
+    <h2>📊 Brain Status</h2>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="num" id="statQueue">—</div>
+        <div class="lbl">Queue</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statConflicts">—</div>
+        <div class="lbl">Conflicts</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statProposals">—</div>
+        <div class="lbl">Proposals</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Config ──────────────────────────────────────────── */
+    const USER   = localStorage.getItem("sb_user")   || "mobile_user";
+    const DEVICE = localStorage.getItem("sb_device") || "iphone";
+
+    /* ── Recording state ─────────────────────────────────── */
+    let mediaRecorder = null;
+    let audioChunks   = [];
+    let isRecording   = false;
+
+    async function toggleRecording() {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+            ? "audio/webm;codecs=opus"
+            : "audio/webm";
+          mediaRecorder   = new MediaRecorder(stream, { mimeType });
+          audioChunks     = [];
+          mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+          mediaRecorder.onstop          = sendAudio;
+          mediaRecorder.start(250);         // collect every 250 ms
+          isRecording = true;
+
+          document.getElementById("recordBtn").textContent = "⏹ Stop Recording";
+          document.getElementById("recordBtn").classList.add("recording");
+          document.getElementById("recordStatus").textContent = "Recording… tap to stop";
+        } catch (err) {
+          document.getElementById("recordStatus").textContent = "❌ Mic access denied";
+        }
+      } else {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        isRecording = false;
+        document.getElementById("recordBtn").textContent = "Start Recording";
+        document.getElementById("recordBtn").classList.remove("recording");
+        document.getElementById("recordStatus").textContent = "Processing…";
+      }
+    }
+
+    async function sendAudio() {
+      const blob   = new Blob(audioChunks, { type: "audio/webm" });
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const b64  = reader.result.split(",")[1];
+        const resp = await safeFetch("/notes/voice", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ audio_b64: b64, filename: "note.webm",
+                                    user: USER, device: DEVICE }),
+        });
+        if (resp) {
+          document.getElementById("recordStatus").textContent =
+            `✅ Queued — job ${resp.job_id}`;
+        } else {
+          document.getElementById("recordStatus").textContent = "❌ Upload failed";
+        }
+      };
+      reader.readAsDataURL(blob);
+    }
+
+    /* ── Text note ───────────────────────────────────────── */
+    async function submitText() {
+      const text = document.getElementById("noteText").value.trim();
+      if (!text) return;
+      const resp = await safeFetch("/notes/text", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ text, user: USER, device: DEVICE }),
+      });
+      if (resp) {
+        document.getElementById("textStatus").textContent = `✅ Queued — job ${resp.job_id}`;
+        document.getElementById("noteText").value = "";
+        loadStatus();
+      } else {
+        document.getElementById("textStatus").textContent = "❌ Error submitting note";
+      }
+    }
+
+    /* ── Search ──────────────────────────────────────────── */
+    async function doSearch() {
+      const q = document.getElementById("searchQuery").value.trim();
+      if (!q) return;
+      const resp = await safeFetch(`/search?query=${encodeURIComponent(q)}`);
+      const el   = document.getElementById("searchResults");
+      if (!resp) { el.innerHTML = "<p class='status-line'>❌ Search failed</p>"; return; }
+      if (!resp.results.length) { el.innerHTML = "<p class='status-line'>No results found</p>"; return; }
+      el.innerHTML = resp.results.map(r => `
+        <div class="result-item">
+          <p>${escHtml(r.content)}</p>
+          <div style="margin-top:4px">${(r.tags||[]).map(t=>`<span class="tag">${escHtml(t)}</span>`).join("")}</div>
+        </div>`).join("");
+    }
+
+    /* ── Status ──────────────────────────────────────────── */
+    async function loadStatus() {
+      const d = await safeFetch("/status");
+      if (!d) return;
+      document.getElementById("statQueue").textContent     = d.queue_depth;
+      document.getElementById("statConflicts").textContent = d.pending_conflicts;
+      document.getElementById("statProposals").textContent = d.pending_proposals;
+      document.getElementById("connStatus").textContent    = "online";
+      document.getElementById("connStatus").style.color    = "#34d399";
+    }
+
+    /* ── Helpers ─────────────────────────────────────────── */
+    async function safeFetch(url, opts) {
+      try {
+        const r = await fetch(url, opts);
+        if (!r.ok) return null;
+        return await r.json();
+      } catch { return null; }
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    /* ── Init ────────────────────────────────────────────── */
+    loadStatus();
+    setInterval(loadStatus, 10000);
+  </script>
+</body>
+</html>

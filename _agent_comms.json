@@ -357,13 +357,25 @@
     "T14": {
       "name": "Entry Point & README",
       "wave": 7,
-      "status": "running",
+      "status": "complete",
       "started": "2026-06-11T13:09:07.706Z",
-      "completed": null,
+      "completed": "2026-06-11T13:13:44.120Z",
       "notes": "",
-      "exports": {}
+      "exports": {
+        "entrypoint": "python -m simplebrain",
+        "flags": [
+          "--setup (run setup wizard)",
+          "--mcp (stdio MCP server)",
+          "--host",
+          "--port"
+        ],
+        "notes": "All 14 tasks complete. SimpleBrain v0.1.0 ready."
+      }
     }
   },
   "messages": [],
-  "shared_context": {}
+  "shared_context": {
+    "build_complete": true,
+    "completed_at": "2026-06-11T13:13:44.121Z"
+  }
 }

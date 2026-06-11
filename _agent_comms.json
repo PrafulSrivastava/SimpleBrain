@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "project": "SimpleBrain",
+  "plan": "docs/superpowers/plans/2026-06-11-simplebrain-implementation.md",
+  "waves": {
+    "1": ["T1"],
+    "2": ["T2"],
+    "3": ["T3", "T5", "T6", "T7"],
+    "4": ["T4", "T8", "T10"],
+    "5": ["T9", "T13"],
+    "6": ["T11", "T12"],
+    "7": ["T14"]
+  },
+  "tasks": {
+    "T1":  { "name": "Project Scaffold & Core Models", "wave": 1, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T2":  { "name": "BrainConfig",                   "wave": 2, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T3":  { "name": "File Queue",                    "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T5":  { "name": "Pipeline Transcribe",           "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T6":  { "name": "Pipeline Chunk & Tag",          "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T7":  { "name": "Knowledge Store & Index Store", "wave": 3, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T4":  { "name": "Raw Store & Ingest Service",    "wave": 4, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T8":  { "name": "Pipeline File Stage",           "wave": 4, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T10": { "name": "Self-Healer",                   "wave": 4, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T9":  { "name": "Background Worker",             "wave": 5, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T13": { "name": "Setup Wizard",                  "wave": 5, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T11": { "name": "MCP Server",                    "wave": 6, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T12": { "name": "FastAPI Web UI & REST API",     "wave": 6, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} },
+    "T14": { "name": "Entry Point & README",          "wave": 7, "status": "pending", "started": null, "completed": null, "notes": "", "exports": {} }
+  },
+  "messages": [],
+  "shared_context": {}
+}

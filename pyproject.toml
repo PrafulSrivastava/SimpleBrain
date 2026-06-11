@@ -22,5 +22,8 @@ dependencies = [
     "httpx>=0.27.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["simplebrain*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

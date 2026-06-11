@@ -1,7 +1,67 @@
 from __future__ import annotations
 from pathlib import Path
-from pydantic import BaseModel
+from typing import Optional
+from pydantic import BaseModel, model_validator
 import os
+
+
+# LiteLLM provider prefix rules:
+# - ollama models must be "ollama/<model>"
+# - lmstudio models must be "lm_studio/<model>"
+# - openai / anthropic models are used as-is (litellm recognises them natively)
+_PROVIDER_PREFIXES: dict[str, str] = {
+    "ollama": "ollama",
+    "lmstudio": "lm_studio",
+}
+
+# Default API base URLs per provider (used when user doesn't set one)
+_PROVIDER_DEFAULT_API_BASE: dict[str, str] = {
+    "lmstudio": "http://localhost:1234/v1",
+}
+
+# Placeholder API keys for providers that don't require real auth
+_PROVIDER_PLACEHOLDER_API_KEY: dict[str, str] = {
+    "lmstudio": "lm-studio",
+}
+
+
+def _normalize_litellm_model(provider: str, model: str) -> str:
+    """Return the fully-qualified LiteLLM model string for *provider*/*model*.
+
+    If *model* is already prefixed (e.g. the user typed ``lm_studio/gemma``)
+    it is returned unchanged.  Otherwise the appropriate provider prefix is
+    prepended so LiteLLM can route the call correctly.
+    """
+    prefix = _PROVIDER_PREFIXES.get(provider.lower())
+    if prefix and not model.startswith(f"{prefix}/") and not model.startswith(f"{prefix}_chat/"):
+        return f"{prefix}/{model}"
+    return model
+
+
+def build_litellm_kwargs(
+    provider: str,
+    model: str,
+    api_base: str | None = None,
+    api_key: str | None = None,
+) -> dict:
+    """Build a complete kwargs dict for ``litellm.completion()`` from raw inputs.
+
+    This is used by the setup wizard (which works from an *answers* dict before
+    a BrainConfig is written) and mirrors the ``BrainConfig.litellm_kwargs``
+    property used everywhere else.
+    """
+    normalized = _normalize_litellm_model(provider, model)
+    kwargs: dict = {"model": normalized}
+
+    resolved_base = api_base or _PROVIDER_DEFAULT_API_BASE.get(provider.lower())
+    if resolved_base:
+        kwargs["api_base"] = resolved_base
+
+    resolved_key = api_key or _PROVIDER_PLACEHOLDER_API_KEY.get(provider.lower())
+    if resolved_key:
+        kwargs["api_key"] = resolved_key
+
+    return kwargs
 
 
 class BrainConfig(BaseModel):
@@ -12,6 +72,25 @@ class BrainConfig(BaseModel):
     device: str = "unknown"
     llm_provider: str = "openai"
     llm_model: str = "gpt-4o-mini"
+    llm_api_base: Optional[str] = None   # e.g. http://192.168.178.37:1234/v1
+    llm_api_key: Optional[str] = None    # override; auto-filled for lmstudio
+    healer_schedule: str = "daily"        # daily | weekly | manual
+
+    @model_validator(mode="after")
+    def _normalise_model(self) -> "BrainConfig":
+        """Ensure llm_model is a fully-qualified LiteLLM model string."""
+        self.llm_model = _normalize_litellm_model(self.llm_provider, self.llm_model)
+        return self
+
+    @property
+    def litellm_kwargs(self) -> dict:
+        """Return kwargs to spread into every ``litellm.completion()`` call."""
+        return build_litellm_kwargs(
+            provider=self.llm_provider,
+            model=self.llm_model,   # already normalised by validator
+            api_base=self.llm_api_base,
+            api_key=self.llm_api_key,
+        )
 
     def model_post_init(self, __context):
         for folder in [
@@ -62,4 +141,7 @@ class BrainConfig(BaseModel):
             device=os.getenv("BRAIN_DEVICE", "unknown"),
             llm_provider=os.getenv("LLM_PROVIDER", "openai"),
             llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
+            llm_api_base=os.getenv("LLM_API_BASE") or None,
+            llm_api_key=os.getenv("LLM_API_KEY") or None,
+            healer_schedule=os.getenv("BRAIN_HEALER_SCHEDULE", "daily"),
         )

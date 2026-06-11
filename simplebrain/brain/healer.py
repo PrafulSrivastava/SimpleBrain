@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json
 import litellm
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from simplebrain.config import BrainConfig
@@ -74,7 +74,7 @@ class SelfHealer:
 
             prompt = _HEAL_PROMPT.format(chunks="\n".join(chunks_text))
             response = litellm.completion(
-                model=self.config.llm_model,
+                **self.config.litellm_kwargs,
                 messages=[{"role": "user", "content": prompt}],
             )
             raw = response.choices[0].message.content.strip()
@@ -103,7 +103,7 @@ class SelfHealer:
         conflict = Conflict(**json.loads(pending_path.read_text()))
         conflict.resolution = resolution
         conflict.resolved_by = resolved_by
-        conflict.resolved_at = datetime.utcnow()
+        conflict.resolved_at = datetime.now(timezone.utc)
         conflict.status = ConflictStatus.RESOLVED
 
         log = self.load_resolution_log()

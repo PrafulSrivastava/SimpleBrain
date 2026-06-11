@@ -33,7 +33,7 @@ class FileStage:
             content=chunk.content[:500],
         )
         response = litellm.completion(
-            model=self.config.llm_model,
+            **self.config.litellm_kwargs,
             messages=[{"role": "user", "content": prompt}],
         )
         raw = response.choices[0].message.content.strip()

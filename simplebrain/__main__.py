@@ -30,33 +30,130 @@ def main():
 
 
 def _run_setup(config: BrainConfig) -> None:
-    """Interactive setup wizard."""
+    """Single-question setup: describe your brain, LLM designs the structure."""
     from simplebrain.setup.wizard import SetupWizard
 
-    print("🧠 SimpleBrain Setup\n")
-    purpose = input("What is this knowledge base about?\n> ").strip()
-    users_raw = input("Who will use it? (comma-separated usernames)\n> ")
-    users = [u.strip() for u in users_raw.split(",") if u.strip()]
-    topics_raw = input("What are the main topics? (comma-separated)\n> ")
-    topics = [t.strip() for t in topics_raw.split(",") if t.strip()]
-    schedule = input("Healer schedule? (daily/weekly/manual) [daily]\n> ").strip() or "daily"
-    provider = input("LLM provider? (openai/anthropic/ollama) [openai]\n> ").strip() or "openai"
-    model = input("LLM model? (e.g. gpt-4o-mini) [gpt-4o-mini]\n> ").strip() or "gpt-4o-mini"
+    print()
+    print("  SimpleBrain Setup")
+    print("  " + "-" * 50)
+    print()
+    print("  LLM config is read from your .env file.")
+    print(f"  Using: {config.llm_provider} / {config.llm_model}")
+    if config.llm_api_base:
+        print(f"  API base: {config.llm_api_base}")
+    print()
 
-    answers = {
-        "purpose": purpose,
-        "users": users,
-        "topics": topics,
-        "healer_schedule": schedule,
-        "llm_provider": provider,
-        "llm_model": model,
-    }
+    # Verify LLM key is present for providers that need one
+    _warn_if_missing_api_key(config)
+
+    print("  Describe your knowledge base in your own words.")
+    print("  Include: what it's for, who will use it, what topics or areas")
+    print("  you plan to store, and anything else that would help organise it.")
+    print("  (End input with a blank line)")
+    print()
+
+    lines: list[str] = []
+    while True:
+        try:
+            line = input("  > ")
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if line == "" and lines:
+            break
+        lines.append(line)
+
+    description = "\n".join(lines).strip()
+    if not description:
+        print("\n  No description provided. Setup cancelled.")
+        return
+
+    print()
+    print("  Thinking...", flush=True)
 
     wizard = SetupWizard(config)
-    folders = wizard.run(answers)
-    print(f"\n✅ Setup complete! Created folders: {', '.join(folders)}")
-    print(f"\nRun the brain:  python -m simplebrain")
-    print(f"Run MCP server: python -m simplebrain --mcp")
+
+    try:
+        proposal = wizard.propose(description)
+    except ValueError as exc:
+        print(f"\n  Error: {exc}")
+        print("  Check your LLM config in .env and try again.")
+        return
+
+    # Pretty-print the proposed structure
+    _print_proposal(proposal)
+
+    # Ask for confirmation
+    try:
+        confirm = input("  Create this structure? [Y/n] ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        confirm = "n"
+
+    if confirm in ("", "y", "yes"):
+        folders = wizard.apply(proposal)
+        print()
+        print(f"  Setup complete! Created {len(folders)} folders under:")
+        print(f"  {config.knowledge_dir}")
+        print()
+        print("  Next steps:")
+        print("    Run the brain:  python -m simplebrain")
+        print("    Run MCP server: python -m simplebrain --mcp")
+        print()
+    else:
+        print()
+        print("  Setup cancelled. Nothing was created.")
+        print()
+
+
+def _warn_if_missing_api_key(config: BrainConfig) -> None:
+    """Print a warning if a real API key is probably needed but not set."""
+    provider = config.llm_provider.lower()
+    needs_key = provider in ("openai", "anthropic", "cohere", "gemini", "groq")
+    key_set = bool(config.llm_api_key)
+    if needs_key and not key_set:
+        import os
+        # LiteLLM also reads env vars like OPENAI_API_KEY directly
+        env_key_map = {
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "cohere": "COHERE_API_KEY",
+            "gemini": "GEMINI_API_KEY",
+            "groq": "GROQ_API_KEY",
+        }
+        env_var = env_key_map.get(provider, "LLM_API_KEY")
+        if not os.getenv(env_var):
+            print(f"  WARNING: {env_var} is not set. The LLM call may fail.")
+            print(f"  Set it in your .env file or as an environment variable.")
+            print()
+
+
+def _print_proposal(proposal: dict) -> None:
+    """Print the LLM-proposed structure in a readable format."""
+    folders = proposal.get("folders", [])
+    summary = proposal.get("summary", "")
+    schedule = proposal.get("healer_schedule", "daily")
+
+    print()
+    print("  Proposed Knowledge Base")
+    print("  " + "-" * 50)
+    if summary:
+        print(f"  Purpose : {summary}")
+    print(f"  Healing : {schedule}")
+    print()
+    print(f"  {'Folder':<22} Description")
+    print(f"  {'------':<22} -----------")
+    for f in folders:
+        name = f.get("name", "")
+        desc = f.get("description", "")
+        # Wrap description at 55 chars
+        if len(desc) > 55:
+            desc = desc[:52] + "..."
+        print(f"  {name:<22} {desc}")
+        examples = f.get("examples", [])
+        if examples:
+            ex_str = ", ".join(examples[:3])
+            print(f"  {'':22} e.g. {ex_str}")
+    print()
 
 
 def _run_mcp(config: BrainConfig) -> None:

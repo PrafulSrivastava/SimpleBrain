@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -31,7 +31,7 @@ class Job(BaseModel):
     type: JobType
     user: str
     device: str = "unknown"
-    created: datetime = Field(default_factory=datetime.utcnow)
+    created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status: JobStatus = JobStatus.PENDING
     raw_path: Optional[str] = None       # path to audio or transcript in _raw/
     transcript_path: Optional[str] = None
@@ -40,7 +40,7 @@ class Job(BaseModel):
 
 class Chunk(BaseModel):
     id: str = Field(default_factory=_new_id)
-    created: datetime = Field(default_factory=datetime.utcnow)
+    created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     source_raw: str
     tags: list[str] = Field(default_factory=list)
     links: list[str] = Field(default_factory=list)
@@ -73,7 +73,7 @@ class Resolution(str, Enum):
 
 class Conflict(BaseModel):
     id: str = Field(default_factory=_new_id)
-    detected: datetime = Field(default_factory=datetime.utcnow)
+    detected: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     type: ConflictType
     chunks_involved: list[str]
     summary: str
@@ -96,4 +96,4 @@ class FolderProposal(BaseModel):
     reasoning: str
     held_chunk_ids: list[str] = Field(default_factory=list)
     status: FolderProposalStatus = FolderProposalStatus.PENDING
-    created: datetime = Field(default_factory=datetime.utcnow)
+    created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

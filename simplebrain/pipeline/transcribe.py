@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 from simplebrain.config import BrainConfig
 from simplebrain.models import Job, JobType
 
@@ -13,6 +13,11 @@ _whisper_model = None  # module-level cache
 
 def _get_model():
     global _whisper_model
+    if WhisperModel is None:
+        raise RuntimeError(
+            "faster-whisper is not installed. "
+            "Install it with: pip install faster-whisper"
+        )
     if _whisper_model is None:
         _whisper_model = WhisperModel("base", device="auto", compute_type="auto")
     return _whisper_model
@@ -33,7 +38,7 @@ class TranscribeStage:
         segments, _ = model.transcribe(str(audio_path))
         text = " ".join(s.text for s in segments).strip()
 
-        ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
         out_path = self.config.raw_transcripts_dir / f"{ts}-{job.id}.txt"
         out_path.write_text(text, encoding="utf-8")
         job.transcript_path = str(out_path.relative_to(self.config.brain_root))

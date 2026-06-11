@@ -90,6 +90,13 @@ class SetupWizard:
                 if not line.startswith("```")
             ).strip()
 
+        # Some models (e.g. Gemma) emit a thinking/reasoning block before the JSON.
+        # Extract the first top-level {...} object regardless of what precedes it.
+        brace_start = raw.find("{")
+        brace_end   = raw.rfind("}")
+        if brace_start != -1 and brace_end != -1 and brace_end > brace_start:
+            raw = raw[brace_start : brace_end + 1]
+
         try:
             proposal = json.loads(raw)
         except json.JSONDecodeError as exc:
@@ -101,6 +108,15 @@ class SetupWizard:
         # Validate and normalise
         if not isinstance(proposal.get("folders"), list):
             raise ValueError("LLM response missing 'folders' list.")
+
+        # Normalise healer_schedule — model may return e.g. "daily|weekly"
+        schedule = str(proposal.get("healer_schedule", "daily")).lower()
+        if "daily" in schedule:
+            proposal["healer_schedule"] = "daily"
+        elif "weekly" in schedule:
+            proposal["healer_schedule"] = "weekly"
+        else:
+            proposal["healer_schedule"] = "manual"
 
         # Guarantee 'archive' is present
         names = [f["name"] for f in proposal["folders"]]

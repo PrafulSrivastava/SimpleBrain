@@ -32,15 +32,18 @@ def main():
 def _run_setup(config: BrainConfig) -> None:
     """Single-question setup: describe your brain, LLM designs the structure."""
     from simplebrain.setup.wizard import SetupWizard
+    from simplebrain.config import SUPPORTED_PROVIDERS
 
     print()
     print("  SimpleBrain Setup")
     print("  " + "-" * 50)
     print()
     print("  LLM config is read from your .env file.")
-    print(f"  Using: {config.llm_provider} / {config.llm_model}")
+    print(f"  Provider : {config.llm_provider}")
+    print(f"  Model    : {config.llm_model}")
     if config.llm_api_base:
-        print(f"  API base: {config.llm_api_base}")
+        print(f"  API base : {config.llm_api_base}")
+    print(f"  Supported: {' | '.join(SUPPORTED_PROVIDERS)}")
     print()
 
     # Verify LLM key is present for providers that need one
@@ -107,24 +110,19 @@ def _run_setup(config: BrainConfig) -> None:
 
 def _warn_if_missing_api_key(config: BrainConfig) -> None:
     """Print a warning if a real API key is probably needed but not set."""
+    from simplebrain.config import _PROVIDERS_REQUIRING_KEY, _PROVIDER_API_KEY_ENV
+    import os
+
     provider = config.llm_provider.lower()
-    needs_key = provider in ("openai", "anthropic", "cohere", "gemini", "groq")
+    if provider not in _PROVIDERS_REQUIRING_KEY:
+        return  # local providers (ollama, lmstudio) never need a key
+
     key_set = bool(config.llm_api_key)
-    if needs_key and not key_set:
-        import os
-        # LiteLLM also reads env vars like OPENAI_API_KEY directly
-        env_key_map = {
-            "openai": "OPENAI_API_KEY",
-            "anthropic": "ANTHROPIC_API_KEY",
-            "cohere": "COHERE_API_KEY",
-            "gemini": "GEMINI_API_KEY",
-            "groq": "GROQ_API_KEY",
-        }
-        env_var = env_key_map.get(provider, "LLM_API_KEY")
-        if not os.getenv(env_var):
-            print(f"  WARNING: {env_var} is not set. The LLM call may fail.")
-            print(f"  Set it in your .env file or as an environment variable.")
-            print()
+    env_var = _PROVIDER_API_KEY_ENV.get(provider, "LLM_API_KEY")
+    if not key_set and not os.getenv(env_var):
+        print(f"  WARNING: {env_var} is not set. The LLM call may fail.")
+        print(f"  Set it in your .env file or as an environment variable.")
+        print()
 
 
 def _print_proposal(proposal: dict) -> None:

@@ -17,12 +17,39 @@ _PROVIDER_PREFIXES: dict[str, str] = {
 # Default API base URLs per provider (used when user doesn't set one)
 _PROVIDER_DEFAULT_API_BASE: dict[str, str] = {
     "lmstudio": "http://localhost:1234/v1",
+    "ollama": "http://localhost:11434",
 }
 
 # Placeholder API keys for providers that don't require real auth
 _PROVIDER_PLACEHOLDER_API_KEY: dict[str, str] = {
     "lmstudio": "lm-studio",
+    "ollama": "ollama",
 }
+
+# Providers that require a real API key (used in setup warning)
+_PROVIDERS_REQUIRING_KEY: frozenset[str] = frozenset({
+    "openai", "anthropic", "cohere", "gemini", "groq",
+})
+
+# Env-var name that holds the API key for each provider
+_PROVIDER_API_KEY_ENV: dict[str, str] = {
+    "openai":    "OPENAI_API_KEY",
+    "anthropic": "ANTHROPIC_API_KEY",
+    "cohere":    "COHERE_API_KEY",
+    "gemini":    "GEMINI_API_KEY",
+    "groq":      "GROQ_API_KEY",
+}
+
+# Complete list of supported providers — single source of truth
+SUPPORTED_PROVIDERS: tuple[str, ...] = (
+    "openai",
+    "anthropic",
+    "ollama",
+    "lmstudio",
+    "groq",
+    "gemini",
+    "cohere",
+)
 
 
 def _normalize_litellm_model(provider: str, model: str) -> str:

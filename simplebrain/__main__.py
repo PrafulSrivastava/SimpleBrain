@@ -26,7 +26,7 @@ def main():
     if args.dir:
         from pathlib import Path
         config = config.model_copy(update={"brain_root": Path(args.dir).expanduser().resolve()})
-        config.model_post_init(None)  # model_copy skips post_init — recreate dirs under new root
+    config.init_dirs()  # create dirs once, at the final brain_root only
 
     if args.setup:
         _run_setup(config)

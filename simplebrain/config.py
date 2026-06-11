@@ -120,6 +120,10 @@ class BrainConfig(BaseModel):
         )
 
     def model_post_init(self, __context):
+        pass  # dirs are NOT created on construction — call init_dirs() explicitly
+
+    def init_dirs(self) -> None:
+        """Create all required brain directories. Call once after brain_root is finalised."""
         for folder in [
             self.raw_audio_dir, self.raw_transcripts_dir,
             self.queue_dir, self.queue_dir / "failed",

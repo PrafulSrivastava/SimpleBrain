@@ -14,23 +14,18 @@
     Print wave status from _agent_comms.json without launching anything.
 
 .EXAMPLE
-    # Check current status
     .\scripts\launch-wave.ps1 -Check
-
-    # Launch wave 3 (4 parallel agents)
     .\scripts\launch-wave.ps1 -Wave 3
 
 .NOTES
-    Wave dependency order:
+    Wave order:
       Wave 1: T1  (scaffold)
       Wave 2: T2  (config)
-      Wave 3: T3, T5, T6, T7  (queue + pipeline stages + stores)
-      Wave 4: T4, T8, T10     (ingest service + file stage + healer)
+      Wave 3: T3, T5, T6, T7  (queue + pipeline + stores)
+      Wave 4: T4, T8, T10     (ingest + file stage + healer)
       Wave 5: T9, T13         (worker + setup)
       Wave 6: T11, T12        (mcp + api)
       Wave 7: T14             (entry point + readme)
-
-    Prerequisites: Windows Terminal (wt.exe) and Pi CLI (pi) on PATH.
 #>
 
 param(
@@ -38,13 +33,13 @@ param(
     [switch]$Check
 )
 
-# ── Paths ──────────────────────────────────────────────────────────────────────
+# --- Paths ---
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
 $CommsFile   = Join-Path $ProjectRoot "_agent_comms.json"
-$PromptsDir  = Join-Path $PSScriptRoot ".prompts"
+$PromptsDir  = Join-Path $PSScriptRoot "prompts"
 $RunDir      = Join-Path $PSScriptRoot ".run"
 
-# ── Wave → Task map ────────────────────────────────────────────────────────────
+# --- Wave to Task map ---
 $WaveMap = @{
     1 = @("T1")
     2 = @("T2")
@@ -55,25 +50,25 @@ $WaveMap = @{
     7 = @("T14")
 }
 
-# ── Task metadata ──────────────────────────────────────────────────────────────
+# --- Task metadata ---
 $TaskMeta = @{
-    "T1"  = @{ Name = "Project Scaffold & Core Models"; Section = "## Task 1:"  }
-    "T2"  = @{ Name = "BrainConfig";                   Section = "## Task 2:"  }
-    "T3"  = @{ Name = "File Queue";                    Section = "## Task 3:"  }
-    "T4"  = @{ Name = "Raw Store & Ingest Service";    Section = "## Task 4:"  }
-    "T5"  = @{ Name = "Pipeline - Transcribe";         Section = "## Task 5:"  }
-    "T6"  = @{ Name = "Pipeline - Chunk & Tag";        Section = "## Task 6:"  }
-    "T7"  = @{ Name = "Knowledge Store & Index Store"; Section = "## Task 7:"  }
-    "T8"  = @{ Name = "Pipeline File Stage";           Section = "## Task 8:"  }
-    "T9"  = @{ Name = "Background Worker";             Section = "## Task 9:"  }
-    "T10" = @{ Name = "Self-Healer";                   Section = "## Task 10:" }
-    "T11" = @{ Name = "MCP Server";                    Section = "## Task 11:" }
-    "T12" = @{ Name = "FastAPI Web UI & REST API";     Section = "## Task 12:" }
-    "T13" = @{ Name = "Setup Wizard";                  Section = "## Task 13:" }
-    "T14" = @{ Name = "Entry Point & README";          Section = "## Task 14:" }
+    "T1"  = @{ Name = "Project Scaffold and Core Models" }
+    "T2"  = @{ Name = "BrainConfig" }
+    "T3"  = @{ Name = "File Queue" }
+    "T4"  = @{ Name = "Raw Store and Ingest Service" }
+    "T5"  = @{ Name = "Pipeline Transcribe" }
+    "T6"  = @{ Name = "Pipeline Chunk and Tag" }
+    "T7"  = @{ Name = "Knowledge Store and Index Store" }
+    "T8"  = @{ Name = "Pipeline File Stage" }
+    "T9"  = @{ Name = "Background Worker" }
+    "T10" = @{ Name = "Self-Healer" }
+    "T11" = @{ Name = "MCP Server" }
+    "T12" = @{ Name = "FastAPI Web UI and REST API" }
+    "T13" = @{ Name = "Setup Wizard" }
+    "T14" = @{ Name = "Entry Point and README" }
 }
 
-# ── Helper: load comms file ────────────────────────────────────────────────────
+# --- Load comms file ---
 function Get-Comms {
     if (-not (Test-Path $CommsFile)) {
         Write-Error "_agent_comms.json not found at $CommsFile"
@@ -82,25 +77,20 @@ function Get-Comms {
     return Get-Content $CommsFile -Raw | ConvertFrom-Json
 }
 
-# ── Helper: save comms file ────────────────────────────────────────────────────
-function Save-Comms($comms) {
-    $comms | ConvertTo-Json -Depth 10 | Set-Content $CommsFile -Encoding UTF8
-}
-
-# ── Helper: print status table ─────────────────────────────────────────────────
+# --- Print status table ---
 function Show-Status {
     $comms = Get-Comms
     Write-Host ""
-    Write-Host "  SimpleBrain Agent Comms Status" -ForegroundColor Cyan
-    Write-Host "  ─────────────────────────────────────────────────────" -ForegroundColor DarkGray
-    Write-Host ("  {0,-5} {1,-6} {2,-32} {3}" -f "Wave","Task","Name","Status") -ForegroundColor Gray
-    Write-Host "  ─────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  SimpleBrain Agent Status" -ForegroundColor Cyan
+    Write-Host "  --------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ("  {0,-5} {1,-6} {2,-34} {3}" -f "Wave","Task","Name","Status") -ForegroundColor Gray
+    Write-Host "  --------------------------------------------------" -ForegroundColor DarkGray
 
     for ($w = 1; $w -le 7; $w++) {
         foreach ($tid in $WaveMap[$w]) {
-            $t = $comms.tasks.$tid
+            $t      = $comms.tasks.$tid
             $status = $t.status
-            $color = switch ($status) {
+            $color  = switch ($status) {
                 "complete" { "Green" }
                 "running"  { "Yellow" }
                 "failed"   { "Red" }
@@ -112,51 +102,53 @@ function Show-Status {
                 "failed"   { "[FAIL]" }
                 default    { "[    ]" }
             }
-            Write-Host ("  {0,-5} {1,-6} {2,-32} {3} {4}" -f $w, $tid, $t.name, $icon, $status) -ForegroundColor $color
+            Write-Host ("  {0,-5} {1,-6} {2,-34} {3} {4}" -f $w, $tid, $t.name, $icon, $status) -ForegroundColor $color
         }
     }
 
     Write-Host ""
-    if ($comms.messages.Count -gt 0) {
-        Write-Host "  Recent Messages:" -ForegroundColor Cyan
-        $comms.messages | Select-Object -Last 5 | ForEach-Object {
-            Write-Host "  [$($_.from) → $($_.to)] $($_.text)" -ForegroundColor White
+
+    $comms.messages | Select-Object -Last 5 | ForEach-Object {
+        if ($_.text) {
+            Write-Host ("  MSG [{0} -> {1}] {2}" -f $_.from, $_.to, $_.text) -ForegroundColor White
         }
     }
     Write-Host ""
 }
 
-# ── -Check mode ────────────────────────────────────────────────────────────────
+# --- Check mode ---
 if ($Check) {
     Show-Status
     exit 0
 }
 
-# ── Validate wave ──────────────────────────────────────────────────────────────
+# --- Validate wave number ---
 if ($Wave -lt 1 -or $Wave -gt 7) {
     Write-Host ""
-    Write-Host "  Usage: .\scripts\launch-wave.ps1 -Wave <1-7>" -ForegroundColor Yellow
-    Write-Host "         .\scripts\launch-wave.ps1 -Check" -ForegroundColor Yellow
+    Write-Host "  Usage:" -ForegroundColor Yellow
+    Write-Host "    .\scripts\launch-wave.ps1 -Wave <1-7>" -ForegroundColor Yellow
+    Write-Host "    .\scripts\launch-wave.ps1 -Check" -ForegroundColor Yellow
     Write-Host ""
     Show-Status
     exit 1
 }
 
-# ── Check prerequisites: prior waves must be complete ─────────────────────────
+# --- Check prior wave is complete ---
 if ($Wave -gt 1) {
-    $comms = Get-Comms
+    $comms     = Get-Comms
     $priorWave = $Wave - 1
-    $priorTasks = $WaveMap[$priorWave]
     $incomplete = @()
-    foreach ($tid in $priorTasks) {
+    foreach ($tid in $WaveMap[$priorWave]) {
         if ($comms.tasks.$tid.status -ne "complete") {
             $incomplete += $tid
         }
     }
     if ($incomplete.Count -gt 0) {
         Write-Host ""
-        Write-Host "  [BLOCKED] Wave $Wave cannot start — Wave $priorWave tasks not complete:" -ForegroundColor Red
-        $incomplete | ForEach-Object { Write-Host "    - $_ ($($TaskMeta[$_].Name))" -ForegroundColor Red }
+        Write-Host "  [BLOCKED] Wave $Wave cannot start - Wave $priorWave not finished:" -ForegroundColor Red
+        foreach ($tid in $incomplete) {
+            Write-Host "    - $tid ($($TaskMeta[$tid].Name))" -ForegroundColor Red
+        }
         Write-Host ""
         Write-Host "  Run -Check to see full status." -ForegroundColor Yellow
         Write-Host ""
@@ -164,79 +156,91 @@ if ($Wave -gt 1) {
     }
 }
 
-# ── Create dirs ────────────────────────────────────────────────────────────────
-New-Item -ItemType Directory -Force -Path $PromptsDir | Out-Null
-New-Item -ItemType Directory -Force -Path $RunDir      | Out-Null
+# --- Create working dirs ---
+New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
 
-# ── Generate prompt files and run scripts ─────────────────────────────────────
-$tasks = $WaveMap[$Wave]
+# --- Generate per-task run scripts and build wt command ---
+$tasks   = $WaveMap[$Wave]
+$wtParts = @()
+$first   = $true
 
 Write-Host ""
-Write-Host "  Generating prompts for Wave $Wave ($($tasks.Count) tasks)..." -ForegroundColor Cyan
+Write-Host "  Preparing Wave $Wave ($($tasks.Count) task(s))..." -ForegroundColor Cyan
+Write-Host ""
 
 foreach ($tid in $tasks) {
-    $meta = $TaskMeta[$tid]
+    $taskName   = $TaskMeta[$tid].Name
     $promptFile = Join-Path $PromptsDir "task-$tid.md"
     $runFile    = Join-Path $RunDir "task-$tid.ps1"
 
-    # Read the prompt template and write it
-    $promptContent = Get-Content (Join-Path $PSScriptRoot "prompts\task-$tid.md") -Raw -ErrorAction SilentlyContinue
-    if (-not $promptContent) {
-        Write-Warning "Prompt file not found: scripts\prompts\task-$tid.md — skipping $tid"
+    # Verify prompt file exists
+    if (-not (Test-Path $promptFile)) {
+        Write-Warning "Prompt file missing: $promptFile - skipping $tid"
         continue
     }
 
-    # Write the run script (pi launcher)
-    @"
-# Auto-generated by launch-wave.ps1 — Task $tid: $($meta.Name)
-Set-Location "$ProjectRoot"
-Write-Host "  Starting Task $tid: $($meta.Name)" -ForegroundColor Cyan
-Write-Host "  Comms file: _agent_comms.json" -ForegroundColor DarkGray
-Write-Host ""
-pi "@scripts\.prompts\task-$tid.md"
-"@ | Set-Content $runFile -Encoding UTF8
+    # Relative prompt path for pi (forward slashes)
+    $relPrompt = "scripts/prompts/task-$tid.md"
 
-    Write-Host "  + $tid ($($meta.Name))" -ForegroundColor Green
-}
+    # Write the run script - use single-quoted strings to avoid $ expansion issues
+    $runContent  = "Set-Location '$ProjectRoot'" + "`r`n"
+    $runContent += 'Write-Host "  Task ' + $tid + ': ' + $taskName + '" -ForegroundColor Cyan' + "`r`n"
+    $runContent += 'Write-Host "  Reading: ' + $relPrompt + '" -ForegroundColor DarkGray' + "`r`n"
+    $runContent += 'Write-Host ""' + "`r`n"
+    $runContent += "pi '@$relPrompt'" + "`r`n"
 
-# ── Build and launch Windows Terminal command ──────────────────────────────────
-Write-Host ""
-Write-Host "  Launching Windows Terminal with $($tasks.Count) tab(s) for Wave $Wave..." -ForegroundColor Cyan
+    Set-Content -Path $runFile -Value $runContent -Encoding UTF8
 
-$wtParts = @()
-$first = $true
+    Write-Host "  + $tid - $taskName" -ForegroundColor Green
 
-foreach ($tid in $tasks) {
-    $runFile = Join-Path $RunDir "task-$tid.ps1"
-    if (-not (Test-Path $runFile)) { continue }
-
-    $title = "$tid - $($TaskMeta[$tid].Name)"
-    $cmd   = "powershell -NoExit -File `"$runFile`""
+    # Build wt tab entry
+    $tabTitle = "$tid - $taskName"
+    $tabCmd   = "powershell -NoExit -File `"$runFile`""
 
     if ($first) {
-        $wtParts += "new-tab --title `"$title`" $cmd"
+        $wtParts += "new-tab --title `"$tabTitle`" $tabCmd"
         $first = $false
     } else {
-        $wtParts += "new-tab --title `"$title`" $cmd"
+        $wtParts += "new-tab --title `"$tabTitle`" $tabCmd"
     }
 }
 
+if ($wtParts.Count -eq 0) {
+    Write-Host ""
+    Write-Host "  No tasks to launch. Check prompt files exist in scripts\prompts\" -ForegroundColor Red
+    exit 1
+}
+
+# --- Launch Windows Terminal ---
 $wtArgs = $wtParts -join " ; "
+
+Write-Host ""
+Write-Host "  Launching Windows Terminal with $($wtParts.Count) tab(s)..." -ForegroundColor Cyan
 
 try {
     Start-Process "wt" -ArgumentList $wtArgs
-    Write-Host "  Windows Terminal launched successfully." -ForegroundColor Green
-    Write-Host ""
-    Write-Host "  Each agent will:" -ForegroundColor Gray
+    Write-Host "  Done. Each agent will:" -ForegroundColor Green
     Write-Host "    1. Read the plan and _agent_comms.json" -ForegroundColor Gray
-    Write-Host "    2. Mark their task as [running] in _agent_comms.json" -ForegroundColor Gray
-    Write-Host "    3. Implement all steps" -ForegroundColor Gray
-    Write-Host "    4. Mark their task as [complete] in _agent_comms.json" -ForegroundColor Gray
+    Write-Host "    2. Mark their task [running] in _agent_comms.json" -ForegroundColor Gray
+    Write-Host "    3. Implement all steps and run tests" -ForegroundColor Gray
+    Write-Host "    4. Mark their task [complete] in _agent_comms.json" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "  Monitor progress: .\scripts\launch-wave.ps1 -Check" -ForegroundColor Yellow
-    Write-Host "  Launch next wave: .\scripts\launch-wave.ps1 -Wave $($Wave + 1)" -ForegroundColor Yellow
+    Write-Host "  Monitor : .\scripts\launch-wave.ps1 -Check" -ForegroundColor Yellow
+    if ($Wave -lt 7) {
+        $next = $Wave + 1
+        Write-Host "  Next    : .\scripts\launch-wave.ps1 -Wave $next  (after all Wave $Wave tasks show [DONE])" -ForegroundColor Yellow
+    } else {
+        Write-Host "  Final wave launched - SimpleBrain build in progress!" -ForegroundColor Magenta
+    }
     Write-Host ""
 } catch {
-    Write-Error "Failed to launch Windows Terminal: $_"
-    Write-Host "  Make sure 'wt' (Windows Terminal) is on your PATH." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  ERROR: Could not launch Windows Terminal." -ForegroundColor Red
+    Write-Host "  Make sure 'wt.exe' is on your PATH (install Windows Terminal from the Microsoft Store)." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  To run agents manually, execute these scripts in separate terminals:" -ForegroundColor Yellow
+    foreach ($tid in $tasks) {
+        $runFile = Join-Path $RunDir "task-$tid.ps1"
+        Write-Host "    powershell -File `"$runFile`"" -ForegroundColor Gray
+    }
 }

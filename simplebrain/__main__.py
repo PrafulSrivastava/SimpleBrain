@@ -28,6 +28,9 @@ def main():
         config = config.model_copy(update={"brain_root": Path(args.dir).expanduser().resolve()})
     config.init_dirs()  # create dirs once, at the final brain_root only
 
+    from simplebrain.logger import setup_logging
+    setup_logging(config.brain_root)
+
     if args.setup:
         _run_setup(config)
         return

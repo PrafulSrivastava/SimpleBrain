@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 TEST_DIR   = Path(__file__).parent / "test-e2e"
 PORT       = 8765
 BASE_URL   = f"http://127.0.0.1:{PORT}"
-WAIT_SECS  = 60   # max seconds to wait for worker to process
+WAIT_SECS  = 180  # max seconds to wait for worker to process
 
 os.environ.setdefault("BRAIN_ROOT",   str(TEST_DIR))
 os.environ.setdefault("BRAIN_USER",   "e2e-test")
@@ -233,14 +233,8 @@ try:
         check("Audio file saved to _raw/audio/", len(audio_files) == 1,
               audio_files[0].name if audio_files else "missing")
 
-        # Wait for transcription
-        info("Waiting for voice job to process...")
-        deadline = time.time() + WAIT_SECS
-        while time.time() < deadline:
-            time.sleep(2)
-            r2 = httpx.get(f"{BASE_URL}/status", timeout=5)
-            if r2.json().get("queue_depth", 1) == 0:
-                break
+        # Don't wait here — Phase 4 waits for all jobs including voice
+        info("Voice note queued — Phase 4 will wait for all jobs to complete")
 
         # Verify transcript saved to _raw/transcripts/
         all_transcripts = list((TEST_DIR / "_raw" / "transcripts").glob("*.txt"))

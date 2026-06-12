@@ -1,8 +1,12 @@
 from __future__ import annotations
 import json
+import uuid
 import litellm
 from simplebrain.config import BrainConfig
+from simplebrain.logger import get_logger, llm_log_enabled
 from simplebrain.models import Job, Chunk
+
+log = get_logger(__name__)
 
 _CHUNK_PROMPT = """You are a knowledge chunker. Split the following note into semantic chunks.
 Each chunk should represent one focused idea or topic.
@@ -20,8 +24,31 @@ class ChunkStage:
         self.config = config
 
     def run(self, job: Job) -> list[Chunk]:
-        text = (self.config.brain_root / job.transcript_path).read_text(encoding="utf-8")
+        transcript_file = self.config.brain_root / job.transcript_path
+        log.info("[job=%s] ChunkStage — reading transcript: %s", job.id, transcript_file)
+
+        if not transcript_file.exists():
+            raise FileNotFoundError(
+                f"Transcript file not found: {transcript_file}. "
+                f"transcript_path in job was: {job.transcript_path}"
+            )
+
+        text = transcript_file.read_text(encoding="utf-8")
+
+        if not text.strip():
+            log.warning("[job=%s] Transcript is empty — producing single empty chunk", job.id)
+            return [Chunk(
+                content="",
+                source_raw=job.raw_path or "",
+                user=job.user,
+                device=job.device,
+            )]
+
         prompt = _CHUNK_PROMPT.format(text=text)
+
+        if llm_log_enabled():
+            log.debug("[job=%s] LLM chunk request — model=%s prompt_chars=%d\n--- PROMPT ---\n%s\n--------------",
+                      job.id, self.config.llm_model, len(prompt), prompt[:1000])
 
         response = litellm.completion(
             **self.config.litellm_kwargs,
@@ -29,28 +56,43 @@ class ChunkStage:
         )
         raw = response.choices[0].message.content.strip()
 
+        if llm_log_enabled():
+            log.debug("[job=%s] LLM chunk response — chars=%d\n--- RESPONSE ---\n%s\n----------------",
+                      job.id, len(raw), raw[:2000])
+
+        # Strip thinking preamble
+        brace = raw.find("[")
+        if brace > 0:
+            raw = raw[brace:]
+
         try:
             contents = json.loads(raw)
             if not isinstance(contents, list):
+                log.warning("[job=%s] LLM returned non-list JSON (%s) — treating as single chunk",
+                            job.id, type(contents).__name__)
                 contents = [text]
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
+            log.warning("[job=%s] LLM chunk response is not valid JSON (%s) — treating as single chunk. raw=%r",
+                        job.id, exc, raw[:200])
             contents = [text]
 
-        # If multiple chunks, assign a shared parent id
-        parent_id = None
-        if len(contents) > 1:
-            import uuid
-            parent_id = str(uuid.uuid4())[:8]
+        # Filter out empty strings and obvious prompt leaks
+        contents = [c for c in contents if isinstance(c, str) and c.strip()]
+        if not contents:
+            log.warning("[job=%s] All chunks were empty after filtering — using full text", job.id)
+            contents = [text]
 
-        chunks = []
-        for content in contents:
-            chunk = Chunk(
-                content=content.strip(),
-                source_raw=job.raw_path or "",   # always the original source (audio or text)
+        log.info("[job=%s] ChunkStage — produced %d chunk(s)", job.id, len(contents))
+
+        parent_id = str(uuid.uuid4())[:8] if len(contents) > 1 else None
+
+        return [
+            Chunk(
+                content=c.strip(),
+                source_raw=job.raw_path or "",
                 user=job.user,
                 device=job.device,
                 parent=parent_id,
             )
-            chunks.append(chunk)
-
-        return chunks
+            for c in contents
+        ]

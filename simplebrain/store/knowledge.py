@@ -4,7 +4,10 @@ from datetime import datetime
 import re
 import frontmatter
 from simplebrain.config import BrainConfig
+from simplebrain.logger import get_logger
 from simplebrain.models import Chunk
+
+log = get_logger(__name__)
 
 
 def _filename_for(chunk: Chunk) -> str:
@@ -30,6 +33,7 @@ class KnowledgeStore:
         path = target_dir / _filename_for(chunk)
         self._write_chunk_file(chunk, path)
         chunk.file_path = str(path.relative_to(self.config.brain_root))
+        log.info("[chunk=%s] Written: %s", chunk.id, chunk.file_path)
         return path
 
     def write_unfiled(self, chunk: Chunk) -> Path:

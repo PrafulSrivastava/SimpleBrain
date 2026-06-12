@@ -204,7 +204,7 @@ def _run_all(config: BrainConfig, host: str, port: int) -> None:
     except Exception:
         ip = host
 
-    print(f"\n🧠 SimpleBrain v0.1.0")
+    print(f"\nSimpleBrain v0.1.0")
     print(f"   Brain root: {config.brain_root}")
     print(f"   API:        http://{ip}:{port}")
     print(f"   UI:         http://{ip}:{port}/ui/index.html")

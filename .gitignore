@@ -1,6 +1,6 @@
 # Auto-generated agent run scripts
 scripts/.run/
-__pycache__/
+*/__pycache__/
 *.pyc
 *.pyo
 *.egg-info/
@@ -8,3 +8,4 @@ __pycache__/
 
 # Environment secrets - never commit
 .env
+brain/

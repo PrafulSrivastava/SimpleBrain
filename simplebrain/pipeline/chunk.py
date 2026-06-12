@@ -60,13 +60,12 @@ class ChunkStage:
             log.debug("[job=%s] LLM chunk response — chars=%d\n--- RESPONSE ---\n%s\n----------------",
                       job.id, len(raw), raw[:2000])
 
-        # Strip thinking preamble
-        brace = raw.find("[")
-        if brace > 0:
-            raw = raw[brace:]
-
+        # Strip thinking preamble then parse the FIRST complete JSON array
+        bracket = raw.find("[")
+        if bracket > 0:
+            raw = raw[bracket:]
         try:
-            contents = json.loads(raw)
+            contents, _ = json.JSONDecoder().raw_decode(raw)
             if not isinstance(contents, list):
                 log.warning("[job=%s] LLM returned non-list JSON (%s) — treating as single chunk",
                             job.id, type(contents).__name__)

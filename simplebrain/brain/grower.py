@@ -23,8 +23,30 @@ class SelfGrower:
         self._structure_path.parent.mkdir(parents=True, exist_ok=True)
         self._structure_path.write_text(json.dumps(structure, indent=2))
 
+    def _normalise_folders(self, raw: list) -> list[dict]:
+        """Accept both old format (list of strings) and new format (list of dicts)."""
+        out = []
+        for item in raw:
+            if isinstance(item, str):
+                out.append({"name": item, "display": item, "description": "", "examples": []})
+            elif isinstance(item, dict):
+                out.append({
+                    "name":        item.get("name", ""),
+                    "display":     item.get("display", item.get("name", "")),
+                    "description": item.get("description", ""),
+                    "examples":    item.get("examples", []),
+                })
+        return out
+
     def get_folders(self) -> list[str]:
-        return self.load_structure().get("folders", [])
+        """Return folder names only (for backward compat)."""
+        raw = self.load_structure().get("folders", [])
+        return [f["name"] if isinstance(f, dict) else f for f in raw]
+
+    def get_folder_details(self) -> list[dict]:
+        """Return full folder metadata [{name, display, description, examples}]."""
+        raw = self.load_structure().get("folders", [])
+        return self._normalise_folders(raw)
 
     def create_proposal(self, folder: str, reasoning: str,
                         chunk_id: str) -> FolderProposal:

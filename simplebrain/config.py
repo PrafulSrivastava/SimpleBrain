@@ -84,6 +84,11 @@ def build_litellm_kwargs(
     if resolved_base:
         kwargs["api_base"] = resolved_base
 
+    # Hard timeout so a stalled LM Studio or slow WiFi doesn't block the worker forever.
+    # Override with LLM_TIMEOUT env var if needed (seconds).
+    import os as _os
+    kwargs["timeout"] = float(_os.getenv("LLM_TIMEOUT", "120"))
+
     resolved_key = api_key or _PROVIDER_PLACEHOLDER_API_KEY.get(provider.lower())
     if resolved_key:
         kwargs["api_key"] = resolved_key

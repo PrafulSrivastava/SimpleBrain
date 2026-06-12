@@ -55,14 +55,18 @@ class TagStage:
             log.debug("[chunk=%s] LLM tag response — chars=%d\n--- RESPONSE ---\n%s\n----------------",
                       chunk.id, len(raw), raw[:1000])
 
-        # Strip thinking preamble
-        brace_start = raw.find("{")
-        brace_end   = raw.rfind("}")
-        if brace_start != -1 and brace_end > brace_start:
-            raw = raw[brace_start : brace_end + 1]
-
+        # Strip thinking preamble then parse the FIRST complete JSON object
+        brace = raw.find("{")
+        if brace == -1:
+            brace = raw.find("[")
+        if brace > 0:
+            raw = raw[brace:]
         try:
-            data = json.loads(raw)
+            data, _ = json.JSONDecoder().raw_decode(raw)
+            if not isinstance(data, dict):
+                log.warning("[chunk=%s] LLM tag response decoded to %s, not dict — tags will be empty",
+                            chunk.id, type(data).__name__)
+                data = {}
         except json.JSONDecodeError as exc:
             log.warning("[chunk=%s] LLM tag response is not valid JSON (%s) — tags will be empty. raw=%r",
                         chunk.id, exc, raw[:200])

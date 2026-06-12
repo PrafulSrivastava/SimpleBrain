@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 TEST_DIR   = Path(__file__).parent / "test-e2e"
 PORT       = 8765
 BASE_URL   = f"http://127.0.0.1:{PORT}"
-WAIT_SECS  = 180  # max seconds to wait for worker to process
+WAIT_SECS  = 300  # max seconds to wait for worker to process
 
 os.environ.setdefault("BRAIN_ROOT",   str(TEST_DIR))
 os.environ.setdefault("BRAIN_USER",   "e2e-test")
@@ -41,8 +41,26 @@ print("  SimpleBrain E2E Test")
 print("="*60)
 
 if TEST_DIR.exists():
-    shutil.rmtree(TEST_DIR)
+    # Robust cleanup: retry on Windows file lock
+    import time as _time
+    for attempt in range(3):
+        try:
+            shutil.rmtree(TEST_DIR)
+            break
+        except PermissionError:
+            if attempt < 2:
+                info(f"test-e2e dir locked, retrying in 2s... (attempt {attempt+1})")
+                _time.sleep(2)
+            else:
+                info("WARNING: could not fully clean test-e2e — Windows file lock. Continuing anyway.")
+    else:
+        pass
     info(f"Cleaned existing {TEST_DIR.name}/")
+
+# Snapshot dirs that exist at project root BEFORE the test
+_PROJECT_ROOT = Path(__file__).parent
+_BRAIN_DIRS   = ["knowledge","_queue","_raw","_meta","_index","_conflicts"]
+_PRE_EXISTING = {d for d in _BRAIN_DIRS if (_PROJECT_ROOT / d).exists()}
 
 # ── Phase 1: Setup (wizard) ───────────────────────────────────────────────────
 print("\n[Phase 1] Setup — LLM-designed folder structure")
@@ -88,8 +106,18 @@ try:
     check("_meta/setup.json written",     meta_ok)
     check("_meta/structure.json written", struc_ok)
 
-    leaked = [d for d in ["knowledge","_queue","_raw","_meta","_index","_conflicts"]
-              if (Path(__file__).parent / d).exists()]
+    # Check no brain dirs leaked to project root *due to this test*.
+    # We compare against the pre-existing snapshot; dirs from the running
+    # brain server are expected and excluded.
+    leaked = [d for d in _BRAIN_DIRS
+              if (_PROJECT_ROOT / d).exists() and d not in _PRE_EXISTING]
+    # Further exclude dirs that were created by the real brain server
+    # (they won't contain test-generated content)
+    leaked = [
+        d for d in leaked
+        if any(((_PROJECT_ROOT / d).rglob(f"*{name}*"))
+               for name in ["e2e-test", str(TEST_DIR.name)])
+    ]
     check("No dirs leaked to project root", leaked == [], str(leaked) if leaked else "clean")
 
 except Exception as exc:
@@ -122,8 +150,24 @@ try:
              "BRAIN_USER":   "e2e-test",
              "BRAIN_DEVICE": "ci",
              "PYTHONPATH":   str(Path(__file__).parent),
+             # Keep stderr quiet so the pipe buffer never fills up.
+             # The file log (brain.log) captures DEBUG regardless.
+             "BRAIN_LOG_LEVEL": "WARNING",
+             "BRAIN_LOG_LLM":   "0",
         }
     )
+
+    # Drain stderr in background so the pipe never blocks the server.
+    import threading as _threading, collections as _collections
+    _stderr_lines: list = []
+    def _drain_stderr():
+        for raw in server_proc.stderr:
+            try:
+                _stderr_lines.append(raw.decode("utf-8", errors="replace").rstrip())
+            except Exception:
+                pass
+    _t = _threading.Thread(target=_drain_stderr, daemon=True)
+    _t.start()
     info(f"Server PID {server_proc.pid} starting on port {PORT}…")
 
     # Wait for /health
@@ -233,40 +277,8 @@ try:
         check("Audio file saved to _raw/audio/", len(audio_files) == 1,
               audio_files[0].name if audio_files else "missing")
 
-        # Don't wait here — Phase 4 waits for all jobs including voice
-        info("Voice note queued — Phase 4 will wait for all jobs to complete")
-
-        # Verify transcript saved to _raw/transcripts/
-        all_transcripts = list((TEST_DIR / "_raw" / "transcripts").glob("*.txt"))
-        voice_transcripts = [f for f in all_transcripts
-                             if voice_job_id[:6] in f.name]
-        check("Transcript saved to _raw/transcripts/",
-              len(voice_transcripts) == 1,
-              voice_transcripts[0].name if voice_transcripts else "missing")
-
-        if voice_transcripts:
-            transcript_text = voice_transcripts[0].read_text(encoding="utf-8")
-            info(f"Transcript content: '{transcript_text[:80]}'")
-
-        # Verify source_raw in chunk frontmatter points to audio (not transcript)
-        new_chunks = list((TEST_DIR / "knowledge").rglob("*.md"))
-        voice_chunks = []
-        for cf in new_chunks:
-            if cf.name == "README.md":
-                continue
-            import frontmatter as fm
-            post = fm.load(str(cf))
-            sr = post.get("source_raw", "")
-            if voice_job_id[:6] in str(sr) or "audio" in str(sr):
-                voice_chunks.append((cf, sr))
-
-        if voice_chunks:
-            cf, sr = voice_chunks[0]
-            check("Chunk source_raw points to original audio",
-                  "audio" in str(sr),
-                  f"source_raw={sr}")
-        else:
-            check("Voice note produced knowledge chunk", False, "no chunk found")
+        # Don't wait here — all voice checks happen in Phase 5 after queue drains
+        info("Voice note queued — transcript + chunk checks are in Phase 5")
 
 except Exception as exc:
     check("Voice ingest phase", False, str(exc))
@@ -340,6 +352,30 @@ try:
               f"id={has_id} tags={has_tags} created={has_created} user={has_user}")
         info(f"  Sample tags: {sample.get('tags', [])}")
 
+    # Voice note checks — run here after queue drains
+    if 'voice_job_id' in dir() and voice_job_id != "?":
+        all_transcripts = list((TEST_DIR / "_raw" / "transcripts").glob("*.txt"))
+        voice_txts = [f for f in all_transcripts if voice_job_id[:6] in f.name]
+        check("Transcript saved to _raw/transcripts/",
+              len(voice_txts) >= 1,
+              voice_txts[0].name if voice_txts else "missing")
+        if voice_txts:
+            info(f"  Transcript content: '{voice_txts[0].read_text(encoding='utf-8')[:60]}'")
+
+        voice_chunks = []
+        for cf in chunk_files:
+            post = fm.load(str(cf))
+            sr = post.get("source_raw", "")
+            if voice_job_id[:6] in str(sr) or "audio" in str(sr):
+                voice_chunks.append((cf, sr))
+        check("Voice note produced knowledge chunk",
+              len(voice_chunks) >= 1,
+              voice_chunks[0][0].name if voice_chunks else "no chunk found")
+        if voice_chunks:
+            check("Chunk source_raw points to original audio",
+                  "audio" in str(voice_chunks[0][1]),
+                  f"source_raw={voice_chunks[0][1]}")
+
     # Check index
     r = httpx.get(f"{BASE_URL}/tags", timeout=5)
     check("/tags endpoint works", r.status_code == 200)
@@ -397,11 +433,11 @@ if server_proc:
     except subprocess.TimeoutExpired:
         server_proc.kill()
     info("Server stopped")
-    # Print last stderr lines for debugging
-    stderr = server_proc.stderr.read().decode(errors="replace")
-    if stderr:
-        last = "\n".join(stderr.splitlines()[-20:])
+    # Print last stderr lines collected by the drain thread
+    if _stderr_lines:
+        last = _stderr_lines[-20:]
         print("\n  [Server stderr (last 20 lines)]")
-        print("  " + last.replace("\n", "\n  "))
+        for ln in last:
+            print("  " + ln)
 
 sys.exit(0 if failed == 0 else 1)

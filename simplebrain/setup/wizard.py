@@ -162,10 +162,18 @@ class SetupWizard:
             )
             (folder_path / "README.md").write_text(readme, encoding="utf-8")
 
-        # Persist folder structure via SelfGrower
+        # Persist folder structure via SelfGrower — store full metadata, not just names
         grower = SelfGrower(self.config)
         structure = grower.load_structure()
-        structure["folders"] = folder_names
+        structure["folders"] = [
+            {
+                "name":        f["name"],
+                "display":     f.get("display", f["name"]),
+                "description": f.get("description", ""),
+                "examples":    f.get("examples", []),
+            }
+            for f in proposal.get("folders", [])
+        ]
         grower.save_structure(structure)
 
         # Save full proposal + metadata to _meta/setup.json

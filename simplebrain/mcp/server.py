@@ -99,6 +99,15 @@ class SimpleBrainMCPServer:
                   "user": {"type": "string"},
                   "device": {"type": "string", "default": "unknown"},
               }),
+            T("add_document",
+              "Add a document (base64-encoded PDF, DOCX, PPTX, etc.) to the brain",
+              required=["file_b64", "filename", "user"],
+              properties={
+                  "file_b64": {"type": "string", "description": "Base64-encoded document"},
+                  "filename": {"type": "string", "description": "Original filename with extension"},
+                  "user": {"type": "string"},
+                  "device": {"type": "string", "default": "unknown"},
+              }),
             T("job_status",
               "Check the processing status of an ingestion job",
               required=["job_id"],
@@ -201,6 +210,17 @@ class SimpleBrainMCPServer:
             audio = base64.b64decode(arguments["audio_b64"])
             job_id = self._ingest.add_voice_note(
                 audio,
+                arguments["filename"],
+                arguments["user"],
+                arguments.get("device", "unknown"),
+            )
+            return ok({"job_id": job_id})
+
+        elif name == "add_document":
+            import base64
+            doc = base64.b64decode(arguments["file_b64"])
+            job_id = self._ingest.add_document(
+                doc,
                 arguments["filename"],
                 arguments["user"],
                 arguments.get("device", "unknown"),

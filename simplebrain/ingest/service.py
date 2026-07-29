@@ -40,3 +40,17 @@ class IngestService:
         self.queue.enqueue(job)
         log.info("[job=%s] Queued for processing", job.id)
         return job.id
+
+    def add_document(self, doc_bytes: bytes, filename: str,
+                     user: str, device: str = "unknown") -> str:
+        job = Job(type=JobType.DOCUMENT, user=user, device=device)
+        log.info("[job=%s] Ingesting DOCUMENT — user=%s device=%s filename=%s bytes=%d",
+                 job.id, user, device, filename, len(doc_bytes))
+
+        raw_path = self.raw.save_document(doc_bytes, filename, job.id)
+        job.raw_path = raw_path
+        log.info("[job=%s] Document saved: %s", job.id, raw_path)
+
+        self.queue.enqueue(job)
+        log.info("[job=%s] Queued for processing", job.id)
+        return job.id

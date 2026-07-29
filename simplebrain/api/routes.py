@@ -27,6 +27,13 @@ class VoiceNoteRequest(BaseModel):
     device: str = "unknown"
 
 
+class DocumentNoteRequest(BaseModel):
+    file_b64: str
+    filename: str
+    user: str
+    device: str = "unknown"
+
+
 class ResolveConflictRequest(BaseModel):
     resolution: str
     resolved_by: str
@@ -66,6 +73,12 @@ def create_app(config: BrainConfig) -> FastAPI:
     def add_voice_note(req: VoiceNoteRequest):
         audio = base64.b64decode(req.audio_b64)
         job_id = ingest.add_voice_note(audio, req.filename, req.user, req.device)
+        return {"job_id": job_id}
+
+    @app.post("/notes/document")
+    def add_document(req: DocumentNoteRequest):
+        doc = base64.b64decode(req.file_b64)
+        job_id = ingest.add_document(doc, req.filename, req.user, req.device)
         return {"job_id": job_id}
 
     @app.get("/topics")

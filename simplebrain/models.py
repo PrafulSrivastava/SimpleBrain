@@ -24,6 +24,7 @@ class JobStatus(str, Enum):
 class JobType(str, Enum):
     VOICE = "voice"
     TEXT = "text"
+    DOCUMENT = "document"
 
 
 class Job(BaseModel):

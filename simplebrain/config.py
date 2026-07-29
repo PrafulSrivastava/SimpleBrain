@@ -138,6 +138,7 @@ class BrainConfig(BaseModel):
         """Create all required brain directories. Call once after brain_root is finalised."""
         for folder in [
             self.raw_audio_dir, self.raw_transcripts_dir,
+            self.raw_documents_dir,
             self.queue_dir, self.queue_dir / "failed",
             self.index_dir,
             self.conflicts_dir / "pending",
@@ -153,6 +154,10 @@ class BrainConfig(BaseModel):
     @property
     def raw_transcripts_dir(self) -> Path:
         return self.brain_root / "_raw" / "transcripts"
+
+    @property
+    def raw_documents_dir(self) -> Path:
+        return self.brain_root / "_raw" / "documents"
 
     @property
     def queue_dir(self) -> Path:

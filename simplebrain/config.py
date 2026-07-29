@@ -12,6 +12,7 @@ import os
 _PROVIDER_PREFIXES: dict[str, str] = {
     "ollama": "ollama",
     "lmstudio": "lm_studio",
+    "azure": "azure",
 }
 
 # Default API base URLs per provider (used when user doesn't set one)
@@ -70,6 +71,7 @@ def build_litellm_kwargs(
     model: str,
     api_base: str | None = None,
     api_key: str | None = None,
+    api_version: str | None = None,
 ) -> dict:
     """Build a complete kwargs dict for ``litellm.completion()`` from raw inputs.
 
@@ -93,6 +95,9 @@ def build_litellm_kwargs(
     if resolved_key:
         kwargs["api_key"] = resolved_key
 
+    if api_version:
+        kwargs["api_version"] = api_version
+
     return kwargs
 
 
@@ -104,8 +109,9 @@ class BrainConfig(BaseModel):
     device: str = "unknown"
     llm_provider: str = "openai"
     llm_model: str = "gpt-4o-mini"
-    llm_api_base: Optional[str] = None   # e.g. http://192.168.178.37:1234/v1
-    llm_api_key: Optional[str] = None    # override; auto-filled for lmstudio
+    llm_api_base: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_api_version: Optional[str] = None  # required for azure provider
     healer_schedule: str = "daily"        # daily | weekly | manual
 
     @model_validator(mode="after")
@@ -119,9 +125,10 @@ class BrainConfig(BaseModel):
         """Return kwargs to spread into every ``litellm.completion()`` call."""
         return build_litellm_kwargs(
             provider=self.llm_provider,
-            model=self.llm_model,   # already normalised by validator
+            model=self.llm_model,
             api_base=self.llm_api_base,
             api_key=self.llm_api_key,
+            api_version=self.llm_api_version,
         )
 
     def model_post_init(self, __context):
@@ -179,5 +186,6 @@ class BrainConfig(BaseModel):
             llm_model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
             llm_api_base=os.getenv("LLM_API_BASE") or None,
             llm_api_key=os.getenv("LLM_API_KEY") or None,
+            llm_api_version=os.getenv("LLM_API_VERSION") or None,
             healer_schedule=os.getenv("BRAIN_HEALER_SCHEDULE", "daily"),
         )

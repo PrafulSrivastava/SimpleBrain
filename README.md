@@ -155,6 +155,63 @@ See `.env.example` for per-provider example blocks.
 
 ---
 
+### Continental AI Nexus (genai-nexus)
+
+The internal `genai-nexus.api.corpinter.net` gateway exposes both OpenAI-compatible and Anthropic/Bedrock models under a single API key.
+
+#### OpenAI models (recommended)
+
+Uses the AzureOpenAI-compatible endpoint. Set `.env`:
+
+```env
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o          # or gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol, gpt-5.1, gpt-5-mini
+LLM_API_BASE=https://genai-nexus.api.corpinter.net/
+LLM_API_KEY=<your-nexus-api-key>
+```
+
+Available production models:
+
+| Model | Notes |
+|---|---|
+| `gpt-5.6-luna` | Latest GPT-5.6 variant |
+| `gpt-5.6-terra` | Latest GPT-5.6 variant |
+| `gpt-5.6-sol` | Latest GPT-5.6 variant |
+| `gpt-5.1` | Reasoning model — use `gpt-4o` replacement |
+| `gpt-5` | Reasoning model |
+| `gpt-5-mini` | Lightweight reasoning |
+| `gpt-5-nano` | Fastest |
+| `gpt-4o` | Stable, widely tested |
+| `gpt-4o-mini` | Lightweight, fast |
+
+> `gpt-5.1` and above are reasoning models with internal chain-of-thought. For SimpleBrain's pipeline (chunking, tagging, filing) `gpt-4o` or `gpt-5-nano` are the best cost/latency tradeoff.
+
+#### Anthropic/Bedrock models
+
+Uses `boto3` with bearer token auth. **LiteLLM does not support this path natively** — a custom wrapper is required. For now, use the OpenAI models above.
+
+Quick test that your key works:
+
+```python
+import boto3, os
+os.environ['AWS_BEARER_TOKEN_BEDROCK'] = '<your-nexus-api-key>'
+
+client = boto3.client(
+    service_name='bedrock-runtime',
+    endpoint_url='https://genai-nexus.api.corpinter.net',
+    region_name='nexus',
+)
+response = client.converse(
+    modelId='claude-sonnet-4.6',
+    messages=[{'role': 'user', 'content': [{'text': 'ping'}]}],
+)
+print(response['output']['message']['content'][0]['text'])
+```
+
+Available: `claude-sonnet-4.6`
+
+---
+
 ## iPhone / Mobile Access
 
 1. Run `simplebrain` on your Mac

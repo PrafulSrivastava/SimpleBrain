@@ -42,6 +42,10 @@ class TranscribeStage:
             job.transcript_path = job.raw_path
             return job
 
+        if job.type == JobType.DOCUMENT:
+            log.debug("[job=%s] DOCUMENT job — handled by DoclingStage", job.id)
+            return job
+
         audio_path = self.config.brain_root / job.raw_path
         log.info("[job=%s] Transcribing audio: %s", job.id, audio_path)
 

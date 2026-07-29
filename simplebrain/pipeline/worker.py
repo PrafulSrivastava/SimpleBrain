@@ -4,7 +4,8 @@ import time
 from simplebrain.config import BrainConfig
 from simplebrain.ingest.queue import FileQueue
 from simplebrain.logger import get_logger
-from simplebrain.models import JobStatus
+from simplebrain.models import JobStatus, JobType
+from simplebrain.pipeline.docling_stage import DoclingStage
 from simplebrain.pipeline.transcribe import TranscribeStage
 from simplebrain.pipeline.chunk import ChunkStage
 from simplebrain.pipeline.tag import TagStage
@@ -22,6 +23,7 @@ class BackgroundWorker:
         self.config = config
         self.queue = FileQueue(config)
         self.transcribe = TranscribeStage(config)
+        self.docling = DoclingStage(config)
         self.chunk = ChunkStage(config)
         self.tag = TagStage(config)
         self.file = FileStage(config)
@@ -37,9 +39,12 @@ class BackgroundWorker:
                  job.id, job.type, job.user, job.device, job.raw_path)
 
         try:
-            # Stage 1: Transcribe
-            log.info("[job=%s] Stage 1/5: Transcribe", job.id)
-            job = self.transcribe.run(job)
+            # Stage 1: Transcribe / Parse
+            log.info("[job=%s] Stage 1/5: Transcribe/Parse", job.id)
+            if job.type == JobType.DOCUMENT:
+                job = self.docling.run(job)
+            else:
+                job = self.transcribe.run(job)
             log.info("[job=%s] Stage 1 done — transcript_path=%s", job.id, job.transcript_path)
 
             # Stage 2: Chunk

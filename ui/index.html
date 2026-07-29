@@ -5,199 +5,473 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b0d12" />
   <title>SimpleBrain</title>
+  <script>
+    /* Apply saved theme before first paint to avoid flash */
+    document.documentElement.dataset.mode   = localStorage.getItem("sb_mode")   || "dark";
+    document.documentElement.dataset.scheme = localStorage.getItem("sb_scheme") || "indigo";
+  </script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Base tokens (dark mode default) ────────────────── */
     :root {
-      --bg: #0f0f0f;
-      --card: #1a1a1a;
-      --input: #2a2a2a;
-      --border: #333;
-      --text: #f0f0f0;
-      --muted: #9ca3af;
-      --accent: #7c3aed;
-      --accent-light: #a78bfa;
-      --danger: #dc2626;
-      --danger-dark: #991b1b;
+      --bg: #0b0d12;
+      --surface: #12151d;
+      --surface-2: #1a1e29;
+      --border: #232837;
+      --border-focus: #4f5b78;
+      --text: #e8eaf0;
+      --muted: #8b93a7;
+      --faint: #5c6478;
+      --green: #3ecf8e;
+      --red: #f0506e;
+      --red-soft: rgba(240, 80, 110, 0.12);
+      --radius: 16px;
+      --accent-contrast: #0b0d12;
+      --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+      --glow: color-mix(in srgb, var(--accent) 8%, transparent);
     }
+
+    /* ── Color schemes (dark variants) ──────────────────── */
+    :root, :root[data-scheme="indigo"]  { --accent: #6d8dff; --accent-2: #9b6dff; }
+    :root[data-scheme="emerald"]        { --accent: #3ecf8e; --accent-2: #2dd4bf; }
+    :root[data-scheme="rose"]           { --accent: #fb7185; --accent-2: #e879f9; }
+
+    /* ── Light mode ─────────────────────────────────────── */
+    :root[data-mode="light"] {
+      --bg: #f3f4f9;
+      --surface: #ffffff;
+      --surface-2: #f1f2f7;
+      --border: #e3e6ef;
+      --border-focus: #b7c0d8;
+      --text: #191d28;
+      --muted: #596276;
+      --faint: #98a0b3;
+      --red-soft: rgba(240, 80, 110, 0.10);
+      --accent-contrast: #ffffff;
+    }
+
+    /* Deeper accents for contrast on light backgrounds */
+    :root[data-mode="light"][data-scheme="indigo"]  { --accent: #4c6ef5; --accent-2: #7048e8; }
+    :root[data-mode="light"][data-scheme="emerald"] { --accent: #0ca678; --accent-2: #15aabf; }
+    :root[data-mode="light"][data-scheme="rose"]    { --accent: #e64980; --accent-2: #be4bdb; }
+
+    html { -webkit-text-size-adjust: 100%; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(1200px 500px at 50% -10%, var(--glow), transparent 60%),
+        var(--bg);
       color: var(--text);
-      padding: env(safe-area-inset-top, 1rem) 1rem env(safe-area-inset-bottom, 1rem);
-      max-width: 640px;
+      transition: background 0.25s, color 0.25s;
+      min-height: 100vh;
+      padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px
+               calc(env(safe-area-inset-bottom, 0px) + 32px);
+      max-width: 560px;
       margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* ── Header ─────────────────────────────────────────── */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem 0 1.25rem;
+      padding: 10px 2px 22px;
     }
 
-    header h1 { font-size: 1.5rem; color: var(--accent-light); }
+    .brand { display: flex; align-items: center; gap: 10px; }
 
-    .pill {
-      font-size: 0.7rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 3px 10px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .card h2 {
-      font-size: 0.95rem;
-      margin-bottom: 0.75rem;
-      color: var(--accent-light);
-    }
-
-    textarea {
-      width: 100%;
-      background: var(--input);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.75rem;
-      font-size: 1rem;
-      min-height: 110px;
-      resize: vertical;
-      outline: none;
-    }
-
-    textarea:focus { border-color: var(--accent); }
-
-    input[type="text"] {
-      width: 100%;
-      background: var(--input);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.65rem 0.75rem;
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-      outline: none;
-    }
-
-    input[type="text"]:focus { border-color: var(--accent); }
-
-    button {
-      width: 100%;
-      padding: 0.75rem;
+    .brand .logo {
+      width: 34px; height: 34px;
       border-radius: 10px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid; place-items: center;
+      color: #fff;
+    }
+
+    .brand h1 { font-size: 1.05rem; font-weight: 650; letter-spacing: 0.01em; }
+    .brand p  { font-size: 0.7rem; color: var(--faint); margin-top: 1px; }
+
+    .conn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.72rem; color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+    }
+
+    .conn .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--faint);
+      transition: background 0.3s;
+    }
+    .conn.online .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .conn.online { color: var(--text); }
+
+    /* ── Theme controls ─────────────────────────────────── */
+    .hdr-right { display: flex; align-items: center; gap: 8px; }
+
+    .schemes {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 9px;
+    }
+
+    .swatch {
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      border: none; padding: 0;
       cursor: pointer;
-      margin-top: 0.5rem;
-      transition: opacity 0.15s;
+      opacity: 0.45;
+      transition: opacity 0.15s, box-shadow 0.15s, transform 0.1s;
     }
-
-    button:active { opacity: 0.75; }
-
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-record  { background: var(--danger); color: white; }
-    .btn-record.recording {
-      background: var(--danger-dark);
-      animation: pulse 1s ease-in-out infinite;
+    .swatch:active { transform: scale(0.88); }
+    .swatch.active {
+      opacity: 1;
+      box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--accent);
     }
+    .swatch[data-scheme="indigo"]  { background: linear-gradient(135deg, #6d8dff, #9b6dff); }
+    .swatch[data-scheme="emerald"] { background: linear-gradient(135deg, #3ecf8e, #2dd4bf); }
+    .swatch[data-scheme="rose"]    { background: linear-gradient(135deg, #fb7185, #e879f9); }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.6; }
-    }
-
-    .status-line {
-      font-size: 0.82rem;
+    .mode-btn {
+      width: 32px; height: 32px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
       color: var(--muted);
-      margin-top: 0.5rem;
-      text-align: center;
-      min-height: 1.2em;
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: color 0.15s, transform 0.1s;
+    }
+    .mode-btn:active { transform: scale(0.9); }
+    .mode-btn:hover { color: var(--text); }
+    .mode-btn svg { width: 15px; height: 15px; }
+
+    @media (max-width: 430px) {
+      .brand p { display: none; }
+      #connLabel { display: none; }
+      .conn { padding: 6px 8px; }
     }
 
-    .tag {
-      display: inline-block;
-      background: #2e1065;
-      color: var(--accent-light);
-      border-radius: 5px;
-      padding: 2px 8px;
-      font-size: 0.72rem;
-      margin: 2px 2px 0 0;
+    /* ── Cards ──────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 14px;
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .card-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .card-title svg { color: var(--accent); }
+
+    /* ── Capture tabs ───────────────────────────────────── */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 4px;
+      border: none; border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.82rem; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .tab.active { background: var(--accent-soft); color: var(--accent); }
+    .tab svg { width: 15px; height: 15px; }
+
+    .pane { display: none; }
+    .pane.active { display: block; animation: fadeIn 0.18s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ── Voice pane ─────────────────────────────────────── */
+    .voice-pane { text-align: center; padding: 10px 0 4px; }
+
+    .record-btn {
+      width: 84px; height: 84px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--red);
+      cursor: pointer;
+      display: inline-grid; place-items: center;
+      transition: transform 0.1s, background 0.2s, border-color 0.2s;
+    }
+    .record-btn:active { transform: scale(0.94); }
+    .record-btn svg { width: 30px; height: 30px; }
+
+    /* While recording the waveform is the live indicator —
+       the button is just a static stop control. */
+    .record-btn.recording {
+      background: var(--red-soft);
+      border-color: var(--red);
+    }
+
+    .rec-timer {
+      font-variant-numeric: tabular-nums;
+      font-size: 1.3rem; font-weight: 650;
+      margin-top: 12px;
+      color: var(--text);
+      min-height: 1.6rem;
+    }
+    .rec-timer:empty { display: none; }
+
+    .wave-canvas {
+      display: none;
+      width: 280px; height: 56px;
+      max-width: 100%;
+      margin: 10px auto 0;
+    }
+
+    /* ── Inputs ─────────────────────────────────────────── */
+    textarea, input[type="text"] {
+      width: 100%;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
+    textarea:focus, input[type="text"]:focus { border-color: var(--border-focus); }
+    ::placeholder { color: var(--faint); }
+
+    /* ── Buttons ────────────────────────────────────────── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none; border-radius: 12px;
+      font-size: 0.92rem; font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.985); filter: brightness(1.15); }
+    .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+    .btn-ghost {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px dashed var(--border-focus);
+    }
+
+    /* ── Drop zone (file pane) ──────────────────────────── */
+    .drop-zone {
+      border: 1.5px dashed var(--border-focus);
+      border-radius: 12px;
+      padding: 26px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop-zone:hover, .drop-zone.drag { border-color: var(--accent); background: var(--accent-soft); }
+    .drop-zone svg { color: var(--accent); margin-bottom: 8px; }
+    .drop-zone strong { display: block; font-size: 0.9rem; font-weight: 600; }
+    .drop-zone span { font-size: 0.74rem; color: var(--faint); margin-top: 4px; display: block; }
+
+    /* ── Status / hint line ─────────────────────────────── */
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 10px;
+      text-align: center;
+      min-height: 1.1em;
+    }
+    .hint.ok  { color: var(--green); }
+    .hint.err { color: var(--red); }
+
+    /* ── Search ─────────────────────────────────────────── */
+    .search-row { display: flex; gap: 8px; }
+    .search-row input { flex: 1; }
+    .search-row .btn {
+      width: 48px; flex: none; margin-top: 0;
+      background: var(--accent); color: var(--accent-contrast);
+      border-radius: 12px;
     }
 
     .result-item {
-      border-top: 1px solid var(--border);
-      margin-top: 0.6rem;
-      padding-top: 0.6rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-top: 10px;
+    }
+    .result-item p { font-size: 0.86rem; line-height: 1.55; color: var(--text); }
+
+    .tag {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin: 6px 4px 0 0;
     }
 
-    .result-item p { font-size: 0.88rem; line-height: 1.45; color: #e5e7eb; }
+    .empty { font-size: 0.8rem; color: var(--faint); text-align: center; padding: 12px 0 4px; }
 
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.5rem;
-      text-align: center;
-    }
+    /* ── Stats ──────────────────────────────────────────── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
     .stat-box {
-      background: var(--input);
-      border-radius: 8px;
-      padding: 0.6rem 0.4rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 8px;
+      text-align: center;
     }
-
-    .stat-box .num { font-size: 1.4rem; font-weight: 700; color: var(--accent-light); }
-    .stat-box .lbl { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-
-    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    .stat-box .num { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .stat-box .lbl {
+      font-size: 0.68rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🧠 SimpleBrain</h1>
-    <span class="pill" id="connStatus">connecting…</span>
+    <div class="brand">
+      <div class="logo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a5 5 0 0 0-5 5v1a4 4 0 0 0-2 7.5A4 4 0 0 0 8 22h1a3 3 0 0 0 3-3V5a3 3 0 0 1 3-3"/>
+          <path d="M12 2a5 5 0 0 1 5 5v1a4 4 0 0 1 2 7.5A4 4 0 0 1 16 22h-1a3 3 0 0 1-3-3"/>
+        </svg>
+      </div>
+      <div>
+        <h1>SimpleBrain</h1>
+        <p>your second memory</p>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="schemes" role="radiogroup" aria-label="Color scheme">
+        <button class="swatch" data-scheme="indigo"  aria-label="Indigo scheme"></button>
+        <button class="swatch" data-scheme="emerald" aria-label="Emerald scheme"></button>
+        <button class="swatch" data-scheme="rose"    aria-label="Rose scheme"></button>
+      </div>
+      <button class="mode-btn" id="modeBtn" onclick="toggleMode()" aria-label="Toggle light or dark mode">
+        <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      </button>
+      <div class="conn" id="conn"><span class="dot"></span><span id="connLabel">connecting</span></div>
+    </div>
   </header>
 
-  <!-- Voice note -->
+  <!-- Capture -->
   <div class="card">
-    <h2>🎙 Voice Note</h2>
-    <button class="btn-record" id="recordBtn" onclick="toggleRecording()">
-      Start Recording
-    </button>
-    <p class="status-line" id="recordStatus">Tap to record a voice note</p>
-  </div>
+    <div class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Capture
+    </div>
 
-  <!-- Text note -->
-  <div class="card">
-    <h2>✏️ Text Note</h2>
-    <textarea id="noteText" placeholder="Type your note here…"></textarea>
-    <button class="btn-primary" onclick="submitText()">Add Note</button>
-    <p class="status-line" id="textStatus"></p>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-pane="voice" onclick="switchTab(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>
+        Voice
+      </button>
+      <button class="tab" data-pane="text" onclick="switchTab(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Text
+      </button>
+      <button class="tab" data-pane="file" onclick="switchTab(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+        File
+      </button>
+    </div>
+
+    <!-- Voice pane -->
+    <div class="pane active voice-pane" id="pane-voice">
+      <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Record voice note">
+        <svg id="micIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>
+        <svg id="stopIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      </button>
+      <canvas class="wave-canvas" id="waveCanvas" aria-hidden="true"></canvas>
+      <div class="rec-timer" id="recTimer"></div>
+      <p class="hint" id="recordStatus">Tap to record a voice note</p>
+    </div>
+
+    <!-- Text pane -->
+    <div class="pane" id="pane-text">
+      <textarea id="noteText" placeholder="What's on your mind?"></textarea>
+      <button class="btn btn-primary" onclick="submitText()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Save Note
+      </button>
+      <p class="hint" id="textStatus"></p>
+    </div>
+
+    <!-- File pane -->
+    <div class="pane" id="pane-file">
+      <input type="file" id="docFile"
+             accept=".pdf,.docx,.pptx,.xlsx,.html,.txt,.md"
+             style="display:none" onchange="handleDocFile(this)" />
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('docFile').click()">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+        <strong>Choose a document</strong>
+        <span>PDF · DOCX · PPTX · XLSX · HTML · TXT · MD</span>
+      </div>
+      <p class="hint" id="docStatus"></p>
+    </div>
   </div>
 
   <!-- Search -->
   <div class="card">
-    <h2>🔍 Search</h2>
-    <input type="text" id="searchQuery" placeholder="Search topics, tags, or keywords…"
-           onkeydown="if(event.key==='Enter') doSearch()" />
-    <button class="btn-primary" onclick="doSearch()">Search</button>
+    <div class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      Recall
+    </div>
+    <div class="search-row">
+      <input type="text" id="searchQuery" placeholder="Search your brain…"
+             onkeydown="if(event.key==='Enter') doSearch()" />
+      <button class="btn" onclick="doSearch()" aria-label="Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+    </div>
     <div id="searchResults"></div>
   </div>
 
   <!-- Status -->
   <div class="card">
-    <h2>📊 Brain Status</h2>
+    <div class="card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Activity
+    </div>
     <div class="stat-grid">
       <div class="stat-box">
         <div class="num" id="statQueue">—</div>
@@ -219,12 +493,181 @@
     const USER   = localStorage.getItem("sb_user")   || "mobile_user";
     const DEVICE = localStorage.getItem("sb_device") || "iphone";
 
+    /* ── Theme ───────────────────────────────────────────── */
+    const rootEl = document.documentElement;
+
+    function setMode(m) {
+      rootEl.dataset.mode = m;
+      localStorage.setItem("sb_mode", m);
+      document.getElementById("sunIcon").style.display  = m === "light" ? "none"  : "block";
+      document.getElementById("moonIcon").style.display = m === "light" ? "block" : "none";
+      document.querySelector('meta[name="theme-color"]').content =
+        m === "light" ? "#f3f4f9" : "#0b0d12";
+    }
+
+    function toggleMode() {
+      setMode(rootEl.dataset.mode === "light" ? "dark" : "light");
+    }
+
+    function setScheme(s) {
+      rootEl.dataset.scheme = s;
+      localStorage.setItem("sb_scheme", s);
+      document.querySelectorAll(".swatch").forEach(b =>
+        b.classList.toggle("active", b.dataset.scheme === s));
+    }
+
+    document.querySelectorAll(".swatch").forEach(b =>
+      b.addEventListener("click", () => setScheme(b.dataset.scheme)));
+
+    setMode(rootEl.dataset.mode || "dark");
+    setScheme(rootEl.dataset.scheme || "indigo");
+
+    /* ── Tabs ────────────────────────────────────────────── */
+    function switchTab(btn) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("pane-" + btn.dataset.pane).classList.add("active");
+    }
+
     /* ── Recording state ─────────────────────────────────── */
     let mediaRecorder = null;
     let audioChunks   = [];
     let isRecording   = false;
+    let recTimerId    = null;
+    let recStart      = 0;
+
+    function setHint(id, text, cls) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = "hint" + (cls ? " " + cls : "");
+    }
+
+    function updateTimer() {
+      const s = Math.floor((Date.now() - recStart) / 1000);
+      document.getElementById("recTimer").textContent =
+        `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    }
+
+    /* ── Waveform (ported from resumeKB Waveform.tsx) ──────── */
+    /** Speech threshold: RMS below this counts as silence → idle breathing. */
+    const SPEECH_THRESHOLD = 0.015;
+
+    /** Per-wave config: spatial frequency, phase speed, relative amplitude, alpha. */
+    const WAVES = [
+      { freq: 1.0, speed: 1.6,  amp: 1.0,  alpha: 0.9 },
+      { freq: 1.6, speed: -1.1, amp: 0.65, alpha: 0.5 },
+      { freq: 2.3, speed: 0.8,  amp: 0.4,  alpha: 0.3 },
+    ];
+
+    let audioCtx = null;
+    let waveRaf  = 0;
+
+    function startWaveform(stream) {
+      const canvas = document.getElementById("waveCanvas");
+      const W = 280, H = 56;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.display = "block";
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      audioCtx.createMediaStreamSource(stream).connect(analyser);
+
+      const styles  = getComputedStyle(document.documentElement);
+      const accent  = styles.getPropertyValue("--accent").trim()   || "#6d8dff";
+      const accent2 = styles.getPropertyValue("--accent-2").trim() || "#9b6dff";
+      const gradient = ctx.createLinearGradient(0, 0, W, 0);
+      gradient.addColorStop(0,   accent);
+      gradient.addColorStop(0.5, accent2);
+      gradient.addColorStop(1,   accent);
+
+      const timeData      = new Float32Array(analyser.fftSize);
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Spring state for amplitude (critically-ish damped, slight overshoot)
+      let springValue    = 0;
+      let springVelocity = 0;
+      const STIFFNESS = 90;
+      const DAMPING   = 14;
+
+      let phase        = 0;
+      let breathePhase = 0;
+      let lastTime     = performance.now();
+
+      const draw = (now) => {
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+
+        // --- Measure RMS amplitude ---
+        analyser.getFloatTimeDomainData(timeData);
+        let sum = 0;
+        for (let i = 0; i < timeData.length; i++) sum += timeData[i] * timeData[i];
+        const rms = Math.sqrt(sum / timeData.length);
+
+        const speaking = rms > SPEECH_THRESHOLD;
+        // Perceptual boost: sqrt curve so quiet speech still moves the wave
+        const target = speaking ? Math.min(1, Math.sqrt(rms) * 2.2) : 0;
+
+        // --- Spring integration toward target ---
+        const force = STIFFNESS * (target - springValue) - DAMPING * springVelocity;
+        springVelocity += force * dt;
+        springValue    += springVelocity * dt;
+        if (springValue < 0) springValue = 0;
+
+        // --- Idle breathing: slow sinusoidal swell when silent ---
+        breathePhase += dt * 1.2;
+        const breathe = (0.08 + 0.05 * Math.sin(breathePhase)) * (1 - springValue);
+
+        const amplitude = (springValue * 0.85 + breathe) * (H / 2 - 4);
+
+        phase += dt * (reducedMotion ? 0.3 : 1.5 + springValue * 2.5);
+
+        // --- Draw ---
+        ctx.clearRect(0, 0, W, H);
+        ctx.lineWidth  = 2;
+        ctx.lineCap    = "round";
+        ctx.shadowColor = accent;
+        ctx.shadowBlur  = 8 + springValue * 14;
+
+        const midY = H / 2;
+        for (const wave of WAVES) {
+          ctx.beginPath();
+          ctx.globalAlpha = wave.alpha;
+          ctx.strokeStyle = gradient;
+          for (let x = 0; x <= W; x += 2) {
+            const t = x / W;
+            // Envelope tapers waves to zero at both edges
+            const envelope = Math.sin(Math.PI * t);
+            const y =
+              midY +
+              Math.sin(t * Math.PI * 2 * wave.freq * 2 + phase * wave.speed * Math.PI) *
+                amplitude * wave.amp * envelope;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        waveRaf = requestAnimationFrame(draw);
+      };
+
+      waveRaf = requestAnimationFrame(draw);
+    }
+
+    function stopWaveform() {
+      cancelAnimationFrame(waveRaf);
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      document.getElementById("waveCanvas").style.display = "none";
+    }
 
     async function toggleRecording() {
+      const btn = document.getElementById("recordBtn");
       if (!isRecording) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -237,20 +680,30 @@
           mediaRecorder.onstop          = sendAudio;
           mediaRecorder.start(250);         // collect every 250 ms
           isRecording = true;
+          startWaveform(stream);
+          recStart = Date.now();
+          updateTimer();
+          recTimerId = setInterval(updateTimer, 500);
 
-          document.getElementById("recordBtn").textContent = "⏹ Stop Recording";
-          document.getElementById("recordBtn").classList.add("recording");
-          document.getElementById("recordStatus").textContent = "Recording… tap to stop";
+          btn.classList.add("recording");
+          document.getElementById("micIcon").style.display  = "none";
+          document.getElementById("stopIcon").style.display = "block";
+          setHint("recordStatus", "Recording — tap to stop");
         } catch (err) {
-          document.getElementById("recordStatus").textContent = "❌ Mic access denied";
+          setHint("recordStatus", "Microphone access denied", "err");
         }
       } else {
         mediaRecorder.stop();
         mediaRecorder.stream.getTracks().forEach(t => t.stop());
         isRecording = false;
-        document.getElementById("recordBtn").textContent = "Start Recording";
-        document.getElementById("recordBtn").classList.remove("recording");
-        document.getElementById("recordStatus").textContent = "Processing…";
+        stopWaveform();
+        clearInterval(recTimerId);
+        document.getElementById("recTimer").textContent = "";
+
+        btn.classList.remove("recording");
+        document.getElementById("micIcon").style.display  = "block";
+        document.getElementById("stopIcon").style.display = "none";
+        setHint("recordStatus", "Uploading…");
       }
     }
 
@@ -266,10 +719,10 @@
                                     user: USER, device: DEVICE }),
         });
         if (resp) {
-          document.getElementById("recordStatus").textContent =
-            `✅ Queued — job ${resp.job_id}`;
+          setHint("recordStatus", `Queued — job ${resp.job_id}`, "ok");
+          loadStatus();
         } else {
-          document.getElementById("recordStatus").textContent = "❌ Upload failed";
+          setHint("recordStatus", "Upload failed", "err");
         }
       };
       reader.readAsDataURL(blob);
@@ -285,13 +738,51 @@
         body:    JSON.stringify({ text, user: USER, device: DEVICE }),
       });
       if (resp) {
-        document.getElementById("textStatus").textContent = `✅ Queued — job ${resp.job_id}`;
+        setHint("textStatus", `Queued — job ${resp.job_id}`, "ok");
         document.getElementById("noteText").value = "";
         loadStatus();
       } else {
-        document.getElementById("textStatus").textContent = "❌ Error submitting note";
+        setHint("textStatus", "Error submitting note", "err");
       }
     }
+
+    /* ── Document upload ────────────────────────────────── */
+    async function handleDocFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      setHint("docStatus", `Uploading ${file.name}…`);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const b64 = reader.result.split(",")[1];
+        const resp = await safeFetch("/notes/document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ file_b64: b64, filename: file.name, user: USER, device: DEVICE }),
+        });
+        if (resp) {
+          setHint("docStatus", `Queued — job ${resp.job_id}`, "ok");
+          loadStatus();
+        } else {
+          setHint("docStatus", "Upload failed", "err");
+        }
+        input.value = "";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* Drag & drop support */
+    const dz = document.getElementById("dropZone");
+    ["dragenter", "dragover"].forEach(ev =>
+      dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("drag"); }));
+    ["dragleave", "drop"].forEach(ev =>
+      dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("drag"); }));
+    dz.addEventListener("drop", e => {
+      const input = document.getElementById("docFile");
+      if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        handleDocFile(input);
+      }
+    });
 
     /* ── Search ──────────────────────────────────────────── */
     async function doSearch() {
@@ -299,24 +790,29 @@
       if (!q) return;
       const resp = await safeFetch(`/search?query=${encodeURIComponent(q)}`);
       const el   = document.getElementById("searchResults");
-      if (!resp) { el.innerHTML = "<p class='status-line'>❌ Search failed</p>"; return; }
-      if (!resp.results.length) { el.innerHTML = "<p class='status-line'>No results found</p>"; return; }
+      if (!resp) { el.innerHTML = "<p class='empty'>Search failed</p>"; return; }
+      if (!resp.results.length) { el.innerHTML = "<p class='empty'>No results found</p>"; return; }
       el.innerHTML = resp.results.map(r => `
         <div class="result-item">
           <p>${escHtml(r.content)}</p>
-          <div style="margin-top:4px">${(r.tags||[]).map(t=>`<span class="tag">${escHtml(t)}</span>`).join("")}</div>
+          <div>${(r.tags||[]).map(t=>`<span class="tag">${escHtml(t)}</span>`).join("")}</div>
         </div>`).join("");
     }
 
     /* ── Status ──────────────────────────────────────────── */
     async function loadStatus() {
       const d = await safeFetch("/status");
-      if (!d) return;
+      const conn = document.getElementById("conn");
+      if (!d) {
+        conn.classList.remove("online");
+        document.getElementById("connLabel").textContent = "offline";
+        return;
+      }
       document.getElementById("statQueue").textContent     = d.queue_depth;
       document.getElementById("statConflicts").textContent = d.pending_conflicts;
       document.getElementById("statProposals").textContent = d.pending_proposals;
-      document.getElementById("connStatus").textContent    = "online";
-      document.getElementById("connStatus").style.color    = "#34d399";
+      conn.classList.add("online");
+      document.getElementById("connLabel").textContent = "online";
     }
 
     /* ── Helpers ─────────────────────────────────────────── */

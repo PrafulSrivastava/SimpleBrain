@@ -9,3 +9,4 @@ scripts/.run/
 # Environment secrets - never commit
 .env
 brain/
+.claude/

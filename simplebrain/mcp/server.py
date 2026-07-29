@@ -217,8 +217,11 @@ class SimpleBrainMCPServer:
             return ok({"job_id": job_id})
 
         elif name == "add_document":
-            import base64
-            doc = base64.b64decode(arguments["file_b64"])
+            import base64 as _base64
+            try:
+                doc = _base64.b64decode(arguments["file_b64"])
+            except Exception:
+                return ok({"error": "Invalid base64 in file_b64"})
             job_id = self._ingest.add_document(
                 doc,
                 arguments["filename"],

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import base64
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -77,7 +77,10 @@ def create_app(config: BrainConfig) -> FastAPI:
 
     @app.post("/notes/document")
     def add_document(req: DocumentNoteRequest):
-        doc = base64.b64decode(req.file_b64)
+        try:
+            doc = base64.b64decode(req.file_b64)
+        except Exception:
+            raise HTTPException(status_code=422, detail="Invalid base64 in file_b64")
         job_id = ingest.add_document(doc, req.filename, req.user, req.device)
         return {"job_id": job_id}
 

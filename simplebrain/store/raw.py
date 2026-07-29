@@ -23,5 +23,13 @@ class RawStore:
         path.write_bytes(audio_bytes)
         return str(path.relative_to(self.config.brain_root))
 
+    def save_document(self, doc_bytes: bytes, filename: str, job_id: str) -> str:
+        """Save raw document. Returns relative path from brain_root."""
+        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+        suffix = Path(filename).suffix or ".bin"
+        path = self.config.raw_documents_dir / f"{ts}-{job_id}{suffix}"
+        path.write_bytes(doc_bytes)
+        return str(path.relative_to(self.config.brain_root))
+
     def read_text(self, relative_path: str) -> str:
         return (self.config.brain_root / relative_path).read_text(encoding="utf-8")

@@ -218,6 +218,11 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Generating…';
       setHint("wizardHint", "");
+      // Disable Regenerate and Apply buttons inside proposalSection while inflight
+      const regenBtn = document.querySelector("#proposalSection .btn-row .btn-ghost");
+      const applyBtn = document.querySelector("#proposalSection .btn-row .btn-primary");
+      if (regenBtn) regenBtn.disabled = true;
+      if (applyBtn) applyBtn.disabled = true;
       const data = await safeFetch("/structure/propose", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -225,6 +230,8 @@
       });
       btn.disabled = false;
       btn.textContent = "Generate Structure";
+      if (regenBtn) regenBtn.disabled = false;
+      if (applyBtn) applyBtn.disabled = false;
       if (!data) { setHint("wizardHint", "Generation failed. Check LLM config.", "err"); return; }
       currentProposal = data;
       renderProposal(data.folders);
@@ -237,11 +244,11 @@
         <div class="folder-card" data-idx="${i}">
           <button class="delete-btn" onclick="removeCard(${i})" title="Remove">&times;</button>
           <label>Name</label>
-          <input type="text" value="${esc(f.name)}" onchange="updateCard(${i},'name',this.value)" />
+          <input type="text" value="${esc(f.name)}" oninput="updateCard(${i},'name',this.value)" />
           <label>Description</label>
-          <input type="text" value="${esc(f.description)}" onchange="updateCard(${i},'description',this.value)" />
+          <input type="text" value="${esc(f.description)}" oninput="updateCard(${i},'description',this.value)" />
           <label>Examples (comma-separated)</label>
-          <input type="text" value="${esc((f.examples||[]).join(', '))}" onchange="updateCard(${i},'examples',this.value)" />
+          <input type="text" value="${esc((f.examples||[]).join(', '))}" oninput="updateCard(${i},'examples',this.value)" />
         </div>
       `).join("");
     }
@@ -304,6 +311,11 @@
       const name = document.getElementById("addName").value.trim();
       const desc = document.getElementById("addDesc").value.trim();
       if (!name) return;
+      const nameRe = /^[a-z][a-z0-9-]{0,30}[a-z0-9]$/;
+      if (!nameRe.test(name)) {
+        setHint("managerHint", `Invalid name: "${name}". Use lowercase + hyphens, 2-32 chars.`, "err");
+        return;
+      }
       const data = await safeFetch("/structure/folders", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -322,6 +334,7 @@
       if (!confirm(`Delete folder "${name}"? Files will be moved to _unfiled.`)) return;
       const resp = await safeFetch(`/structure/folders/${name}`, {method: "DELETE"});
       if (!resp) { setHint("managerHint", "Delete failed.", "err"); return; }
+      if (resp.detail) { setHint("managerHint", resp.detail, "err"); return; }
       setHint("managerHint", `Deleted "${name}"`, "ok");
       const s = await safeFetch("/structure");
       if (s) renderFolderList(s.folders);

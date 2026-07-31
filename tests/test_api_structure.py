@@ -62,6 +62,20 @@ def test_apply_structure(client, config):
     assert (config.knowledge_dir / "notes" / "README.md").exists()
 
 
+def test_apply_structure_invalid_name(client):
+    """POST /structure/apply rejects folder names that fail the regex (path traversal guard)."""
+    proposal = {
+        "summary": "Evil brain",
+        "healer_schedule": "daily",
+        "folders": [
+            {"name": "../../bad", "display": "Bad", "description": "path traversal", "examples": []},
+        ],
+    }
+    resp = client.post("/structure/apply", json=proposal)
+    assert resp.status_code == 422
+    assert "Invalid folder name" in resp.json()["detail"]
+
+
 def test_propose_structure(client, monkeypatch):
     """POST /structure/propose calls the wizard and returns a proposal (mock LLM)."""
     from simplebrain.setup import wizard as wizard_mod

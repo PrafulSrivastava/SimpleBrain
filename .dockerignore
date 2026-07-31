@@ -1,0 +1,10 @@
+.git
+.env
+__pycache__
+*.pyc
+*.egg-info
+.pytest_cache
+tests
+e2e_test.py
+scripts
+.serena

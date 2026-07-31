@@ -211,6 +211,10 @@ def create_app(config: BrainConfig) -> FastAPI:
     @app.post("/structure/apply")
     def apply_structure(req: ApplyStructureRequest):
         from simplebrain.setup.wizard import SetupWizard
+        for folder in req.folders:
+            name = folder.get("name", "")
+            if not isinstance(name, str) or not _FOLDER_NAME_RE.match(name):
+                raise HTTPException(status_code=422, detail=f"Invalid folder name: '{name}'")
         wizard = SetupWizard(config)
         proposal = {"summary": req.summary, "healer_schedule": req.healer_schedule, "folders": req.folders}
         folder_names = wizard.apply(proposal)
@@ -300,6 +304,13 @@ def create_app(config: BrainConfig) -> FastAPI:
                     item.unlink()
                     continue
                 dest = unfiled / item.name
+                if dest.exists():
+                    stem = item.stem
+                    suffix = item.suffix
+                    counter = 1
+                    while dest.exists():
+                        dest = unfiled / f"{stem}_{counter}{suffix}"
+                        counter += 1
                 shutil.move(str(item), str(dest))
             folder_path.rmdir()
         grower.save_structure(structure)

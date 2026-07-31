@@ -188,3 +188,53 @@ def test_delete_folder_not_found(client, config):
     _seed_structure(config)
     resp = client.delete("/structure/folders/nonexistent")
     assert resp.status_code == 404
+
+
+def test_full_wizard_flow(client, config, monkeypatch):
+    """End-to-end: propose → edit → apply → verify → add folder → delete folder."""
+    from simplebrain.setup import wizard as wizard_mod
+
+    fake_proposal = {
+        "summary": "Dev brain",
+        "healer_schedule": "daily",
+        "folders": [
+            {"name": "code-notes", "display": "Code Notes", "description": "Programming stuff", "examples": ["python"]},
+            {"name": "archive", "display": "Archive", "description": "Old", "examples": []},
+        ],
+    }
+    monkeypatch.setattr(wizard_mod.SetupWizard, "propose", lambda self, d: fake_proposal)
+
+    # Step 1: propose
+    resp = client.post("/structure/propose", json={"description": "dev brain"})
+    assert resp.status_code == 200
+    proposal = resp.json()
+
+    # Step 2: apply
+    resp = client.post("/structure/apply", json=proposal)
+    assert resp.status_code == 200
+    assert resp.json()["folder_count"] == 2
+
+    # Step 3: verify
+    resp = client.get("/structure")
+    assert resp.status_code == 200
+    names = [f["name"] for f in resp.json()["folders"]]
+    assert "code-notes" in names
+    assert "archive" in names
+
+    # Step 4: add a folder
+    resp = client.post("/structure/folders", json={"name": "meetings", "description": "Meeting notes"})
+    assert resp.status_code == 200
+
+    # Step 5: verify it's there
+    resp = client.get("/structure")
+    names = [f["name"] for f in resp.json()["folders"]]
+    assert "meetings" in names
+
+    # Step 6: delete the new folder
+    resp = client.delete("/structure/folders/meetings")
+    assert resp.status_code == 200
+
+    # Step 7: verify it's gone
+    resp = client.get("/structure")
+    names = [f["name"] for f in resp.json()["folders"]]
+    assert "meetings" not in names

@@ -1,3 +1,4 @@
+import json
 import pytest
 from fastapi.testclient import TestClient
 from simplebrain.api.routes import create_app
@@ -89,9 +90,6 @@ def test_propose_structure(client, monkeypatch):
 def test_propose_structure_empty_description(client):
     resp = client.post("/structure/propose", json={"description": ""})
     assert resp.status_code == 422
-
-
-import json
 
 
 def _seed_structure(config):

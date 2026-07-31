@@ -291,7 +291,6 @@ def create_app(config: BrainConfig) -> FastAPI:
         if not found:
             raise HTTPException(status_code=404, detail=f"Folder '{name}' not found.")
         structure["folders"] = new_folders
-        grower.save_structure(structure)
         folder_path = config.knowledge_dir / name
         unfiled = config.knowledge_dir / "_unfiled"
         unfiled.mkdir(parents=True, exist_ok=True)
@@ -303,6 +302,7 @@ def create_app(config: BrainConfig) -> FastAPI:
                 dest = unfiled / item.name
                 shutil.move(str(item), str(dest))
             folder_path.rmdir()
+        grower.save_structure(structure)
         return {"deleted": True}
 
     # Serve mobile UI

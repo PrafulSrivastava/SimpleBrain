@@ -89,3 +89,104 @@ def test_propose_structure(client, monkeypatch):
 def test_propose_structure_empty_description(client):
     resp = client.post("/structure/propose", json={"description": ""})
     assert resp.status_code == 422
+
+
+import json
+
+
+def _seed_structure(config):
+    """Helper: write a structure with two folders to disk."""
+    structure = {
+        "folders": [
+            {"name": "research", "display": "Research", "description": "Papers", "examples": []},
+            {"name": "archive", "display": "Archive", "description": "Old stuff", "examples": []},
+        ],
+        "pending_proposals": [],
+    }
+    (config.meta_dir / "structure.json").write_text(json.dumps(structure))
+    (config.knowledge_dir / "research").mkdir(parents=True, exist_ok=True)
+    (config.knowledge_dir / "archive").mkdir(parents=True, exist_ok=True)
+
+
+def test_add_folder(client, config):
+    _seed_structure(config)
+    resp = client.post("/structure/folders", json={
+        "name": "daily-log",
+        "display": "Daily Log",
+        "description": "Day-to-day notes",
+        "examples": ["standup", "retrospective"],
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["created"] is True
+    assert data["folder"]["name"] == "daily-log"
+    assert (config.knowledge_dir / "daily-log").is_dir()
+    assert (config.knowledge_dir / "daily-log" / "README.md").exists()
+
+
+def test_add_folder_invalid_name(client, config):
+    _seed_structure(config)
+    resp = client.post("/structure/folders", json={
+        "name": "Invalid Name!",
+        "description": "bad",
+    })
+    assert resp.status_code == 422
+
+
+def test_add_folder_duplicate(client, config):
+    _seed_structure(config)
+    resp = client.post("/structure/folders", json={
+        "name": "research",
+        "description": "duplicate",
+    })
+    assert resp.status_code == 409
+
+
+def test_patch_folder(client, config):
+    _seed_structure(config)
+    resp = client.patch("/structure/folders/research", json={
+        "description": "Updated description",
+    })
+    assert resp.status_code == 200
+    assert resp.json()["folder"]["description"] == "Updated description"
+
+
+def test_patch_folder_rename(client, config):
+    _seed_structure(config)
+    resp = client.patch("/structure/folders/research", json={
+        "new_name": "papers",
+    })
+    assert resp.status_code == 200
+    assert resp.json()["folder"]["name"] == "papers"
+    assert (config.knowledge_dir / "papers").is_dir()
+    assert not (config.knowledge_dir / "research").exists()
+
+
+def test_patch_folder_not_found(client, config):
+    _seed_structure(config)
+    resp = client.patch("/structure/folders/nonexistent", json={"description": "x"})
+    assert resp.status_code == 404
+
+
+def test_delete_folder(client, config):
+    _seed_structure(config)
+    # Put a file in research so we can verify it moves to _unfiled
+    (config.knowledge_dir / "research" / "note.md").write_text("hello")
+    resp = client.delete("/structure/folders/research")
+    assert resp.status_code == 200
+    assert resp.json()["deleted"] is True
+    # File should be in _unfiled now
+    assert (config.knowledge_dir / "_unfiled" / "note.md").exists()
+    assert not (config.knowledge_dir / "research").exists()
+
+
+def test_delete_archive_forbidden(client, config):
+    _seed_structure(config)
+    resp = client.delete("/structure/folders/archive")
+    assert resp.status_code == 403
+
+
+def test_delete_folder_not_found(client, config):
+    _seed_structure(config)
+    resp = client.delete("/structure/folders/nonexistent")
+    assert resp.status_code == 404

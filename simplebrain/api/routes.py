@@ -43,6 +43,12 @@ class RejectProposalRequest(BaseModel):
     target_folder: str
 
 
+class ApplyStructureRequest(BaseModel):
+    summary: str = "Personal knowledge base."
+    healer_schedule: str = "daily"
+    folders: list[dict]
+
+
 def create_app(config: BrainConfig) -> FastAPI:
     app = FastAPI(title="SimpleBrain", version="0.1.0")
     ingest = IngestService(config)
@@ -156,6 +162,29 @@ def create_app(config: BrainConfig) -> FastAPI:
     def run_healer():
         conflicts = healer.scan()
         return {"conflicts_found": len(conflicts)}
+
+    # --- Structure management ---
+
+    @app.get("/structure")
+    def get_structure():
+        folders = grower.get_folder_details()
+        setup_path = config.meta_dir / "setup.json"
+        summary = ""
+        healer_schedule = "daily"
+        if setup_path.exists():
+            import json
+            setup_data = json.loads(setup_path.read_text())
+            summary = setup_data.get("summary", "")
+            healer_schedule = setup_data.get("healer_schedule", "daily")
+        return {"summary": summary, "healer_schedule": healer_schedule, "folders": folders}
+
+    @app.post("/structure/apply")
+    def apply_structure(req: ApplyStructureRequest):
+        from simplebrain.setup.wizard import SetupWizard
+        wizard = SetupWizard(config)
+        proposal = {"summary": req.summary, "healer_schedule": req.healer_schedule, "folders": req.folders}
+        folder_names = wizard.apply(proposal)
+        return {"applied": True, "folder_count": len(folder_names)}
 
     # Serve mobile UI
     ui_dir = Path(__file__).parent.parent.parent / "ui"

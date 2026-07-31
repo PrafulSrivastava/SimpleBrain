@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from simplebrain.config import BrainConfig
 from simplebrain.ingest.service import IngestService
 from simplebrain.store.knowledge import KnowledgeStore
@@ -47,6 +47,10 @@ class ApplyStructureRequest(BaseModel):
     summary: str = "Personal knowledge base."
     healer_schedule: str = "daily"
     folders: list[dict]
+
+
+class ProposeStructureRequest(BaseModel):
+    description: str = Field(min_length=1)
 
 
 def create_app(config: BrainConfig) -> FastAPI:
@@ -177,6 +181,13 @@ def create_app(config: BrainConfig) -> FastAPI:
             summary = setup_data.get("summary", "")
             healer_schedule = setup_data.get("healer_schedule", "daily")
         return {"summary": summary, "healer_schedule": healer_schedule, "folders": folders}
+
+    @app.post("/structure/propose")
+    def propose_structure(req: ProposeStructureRequest):
+        from simplebrain.setup.wizard import SetupWizard
+        wizard = SetupWizard(config)
+        proposal = wizard.propose(req.description)
+        return proposal
 
     @app.post("/structure/apply")
     def apply_structure(req: ApplyStructureRequest):
